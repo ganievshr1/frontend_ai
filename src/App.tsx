@@ -1,26 +1,30 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import AppLayout from './components/layout/AppLayout';
+import AuthForm from './components/auth/AuthForm';
+import './styles/theme.css';
+
+interface AuthData {
+  credentials: string;
+  scope: string;
+}
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const handleLogin = (authData: AuthData) => {
+    console.log('Login with:', authData);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+  };
+
+  if (!isAuthenticated) {
+    return <AuthForm onLogin={handleLogin} />;
+  }
+
+  return <AppLayout onLogout={handleLogout} />;
 }
 
 export default App;
