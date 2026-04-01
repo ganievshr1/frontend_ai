@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Sidebar from '../sidebar/Sidebar';
 import ChatWindow from '../chat/ChatWindow';
+import ThemeToggle from '../ui/ThemeToggle';
 
 interface AppLayoutProps {
   onLogout?: () => void;
@@ -35,6 +36,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({ onLogout }) => {
       <div className="main-content">
         <ChatWindow chatId={selectedChatId} />
       </div>
+      
+      {/* Быстрый переключатель темы */}
+      <ThemeToggle />
     </div>
   );
 };

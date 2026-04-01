@@ -19,6 +19,15 @@
   --error-text: #d32f2f;
   --shadow: rgba(0, 0, 0, 0.1);
   --typing-dot-bg: #999;
+  --stop-btn-bg: #f44336;
+  --stop-btn-hover: #d32f2f;
+  --copy-btn-bg: rgba(0, 0, 0, 0.6);
+  --copy-btn-hover: rgba(0, 0, 0, 0.8);
+  --copy-success-bg: #4caf50;
+  --copy-error-bg: #f44336;
+  --theme-toggle-bg: #ffffff;
+  --theme-toggle-shadow: rgba(0, 0, 0, 0.2);
+  --settings-overlay-bg: rgba(0, 0, 0, 0.5);
 }
 
 [data-theme="dark"] {
@@ -40,6 +49,15 @@
   --error-text: #ff6b6b;
   --shadow: rgba(0, 0, 0, 0.3);
   --typing-dot-bg: #b0b0b0;
+  --stop-btn-bg: #d32f2f;
+  --stop-btn-hover: #b71c1c;
+  --copy-btn-bg: rgba(255, 255, 255, 0.2);
+  --copy-btn-hover: rgba(255, 255, 255, 0.3);
+  --copy-success-bg: #66bb6a;
+  --copy-error-bg: #ff6b6b;
+  --theme-toggle-bg: #2d2d2d;
+  --theme-toggle-shadow: rgba(0, 0, 0, 0.4);
+  --settings-overlay-bg: rgba(0, 0, 0, 0.7);
 }
 
 /* ========== GLOBAL STYLES ========== */
@@ -47,6 +65,10 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body {
@@ -57,6 +79,7 @@ body {
   overflow: hidden;
   background: var(--bg-primary);
   color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #root {
@@ -96,7 +119,7 @@ body {
   flex-shrink: 0;
   background: var(--bg-secondary);
   border-right: 1px solid var(--border-color);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, background-color 0.3s ease;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -122,6 +145,7 @@ body {
   cursor: pointer;
   border-radius: 8px;
   box-shadow: 0 2px 4px var(--shadow);
+  transition: all 0.3s ease;
 }
 
 .burger-icon {
@@ -139,6 +163,40 @@ body {
   transition: all 0.3s ease;
 }
 
+/* ========== THEME TOGGLE BUTTON ========== */
+.theme-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  background: var(--theme-toggle-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px var(--theme-toggle-shadow);
+  transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+  transform: scale(1.1);
+  background: var(--hover-bg);
+  box-shadow: 0 4px 12px var(--theme-toggle-shadow);
+}
+
+.theme-toggle-icon {
+  font-size: 24px;
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover .theme-toggle-icon {
+  transform: rotate(15deg);
+}
+
 /* ========== SIDEBAR COMPONENTS ========== */
 .new-chat-btn {
   margin: 16px;
@@ -153,11 +211,12 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .new-chat-btn:hover {
   background: var(--accent-hover);
+  transform: translateY(-1px);
 }
 
 .plus-icon {
@@ -176,13 +235,14 @@ body {
   border-radius: 6px;
   font-size: 14px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
   background: var(--bg-primary);
   color: var(--text-primary);
 }
 
 .search-input:focus {
   border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
 .chat-list {
@@ -195,7 +255,7 @@ body {
   margin: 4px 8px;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -204,6 +264,7 @@ body {
 
 .chat-item:hover {
   background: var(--hover-bg);
+  transform: translateX(2px);
 }
 
 .chat-item:hover .chat-actions {
@@ -212,6 +273,7 @@ body {
 
 .chat-item.selected {
   background: var(--selected-bg);
+  border-left: 3px solid var(--accent-color);
 }
 
 .chat-info {
@@ -245,15 +307,17 @@ body {
   font-size: 16px;
   padding: 4px;
   border-radius: 4px;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .edit-btn:hover {
   background: var(--hover-bg);
+  transform: scale(1.1);
 }
 
 .delete-btn:hover {
   background: var(--error-bg);
+  transform: scale(1.1);
 }
 
 .edit-form {
@@ -268,6 +332,11 @@ body {
   font-size: 14px;
   background: var(--bg-primary);
   color: var(--text-primary);
+  outline: none;
+}
+
+.edit-input:focus {
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
 /* ========== CHAT WINDOW ========== */
@@ -285,6 +354,7 @@ body {
   justify-content: space-between;
   align-items: center;
   background: var(--bg-primary);
+  transition: all 0.3s ease;
 }
 
 .chat-header h2 {
@@ -301,12 +371,13 @@ body {
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
-  transition: background 0.2s;
+  transition: all 0.2s;
   color: var(--text-primary);
 }
 
 .settings-btn:hover {
   background: var(--hover-bg);
+  transform: translateY(-1px);
 }
 
 /* ========== MESSAGE STYLES ========== */
@@ -325,6 +396,7 @@ body {
   padding: 12px 16px;
   border-radius: 12px;
   animation: fadeIn 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 /* Сообщения пользователя - справа */
@@ -402,28 +474,88 @@ body {
   padding: 0;
 }
 
+/* ========== COPY BUTTON STYLES ========== */
 .copy-btn {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: none;
+  background: var(--copy-btn-bg);
+  backdrop-filter: blur(4px);
   border: none;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s;
-  font-size: 14px;
-  padding: 4px;
-  border-radius: 4px;
-  color: inherit;
+  transition: all 0.2s ease;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  z-index: 10;
+  white-space: nowrap;
 }
 
 .message:hover .copy-btn {
-  opacity: 0.7;
+  opacity: 1;
 }
 
 .copy-btn:hover {
-  opacity: 1 !important;
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--copy-btn-hover);
+  transform: scale(1.05);
+}
+
+.copy-btn.copied {
+  background: var(--copy-success-bg);
+  opacity: 1;
+  animation: copySuccess 0.3s ease;
+}
+
+.copy-btn.error {
+  background: var(--copy-error-bg);
+  opacity: 1;
+  animation: copyError 0.3s ease;
+}
+
+.copy-icon {
+  font-size: 14px;
+}
+
+.copy-text {
+  font-size: 12px;
+}
+
+/* Анимация для успешного копирования */
+@keyframes copySuccess {
+  0% {
+    transform: scale(1);
+    background: var(--copy-btn-bg);
+  }
+  50% {
+    transform: scale(1.1);
+    background: var(--copy-success-bg);
+  }
+  100% {
+    transform: scale(1);
+    background: var(--copy-success-bg);
+  }
+}
+
+/* Анимация для ошибки копирования */
+@keyframes copyError {
+  0% {
+    transform: scale(1);
+    background: var(--copy-btn-bg);
+  }
+  50% {
+    transform: scale(1.1);
+    background: var(--copy-error-bg);
+  }
+  100% {
+    transform: scale(1);
+    background: var(--copy-error-bg);
+  }
 }
 
 /* ========== TYPING INDICATOR ========== */
@@ -465,6 +597,7 @@ body {
   padding: 16px 24px;
   border-top: 1px solid var(--border-color);
   background: var(--bg-primary);
+  transition: all 0.3s ease;
 }
 
 .input-container {
@@ -474,6 +607,11 @@ body {
   background: var(--bg-secondary);
   border-radius: 12px;
   padding: 12px;
+  transition: all 0.2s ease;
+}
+
+.input-container:focus-within {
+  box-shadow: 0 0 0 2px var(--accent-color);
 }
 
 .attach-btn, 
@@ -485,18 +623,76 @@ body {
   font-size: 20px;
   padding: 8px;
   border-radius: 8px;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-weight: 500;
+  /* Ensure touch targets are large enough */
+  min-width: 44px;
+  min-height: 44px;
 }
 
-.attach-btn:hover, 
+.attach-btn {
+  font-size: 20px;
+}
+
+.send-btn {
+  font-size: 14px;
+  padding: 8px 16px;
+}
+
+.stop-btn {
+  font-size: 14px;
+  padding: 8px 16px;
+  background: var(--stop-btn-bg);
+  color: white;
+  gap: 6px;
+}
+
+.attach-btn:hover:not(:disabled), 
 .send-btn:hover:not(:disabled) {
   background: var(--hover-bg);
+  transform: scale(1.05);
+}
+
+.stop-btn:hover:not(:disabled) {
+  background: var(--stop-btn-hover);
+  transform: scale(1.05);
+}
+
+.stop-btn.active {
+  animation: pulse 1.5s ease-in-out infinite;
 }
 
 .send-btn:disabled, 
-.stop-btn:disabled {
+.stop-btn:disabled,
+.attach-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
+}
+
+.send-btn:disabled:hover,
+.stop-btn:disabled:hover,
+.attach-btn:disabled:hover {
+  background: none;
+  transform: none;
+}
+
+/* Анимация пульсации для кнопки "Стоп" */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(244, 67, 54, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
+  }
 }
 
 .textarea {
@@ -518,6 +714,10 @@ body {
   color: var(--text-secondary);
 }
 
+.textarea:focus {
+  outline: none;
+}
+
 .textarea:disabled {
   background: var(--bg-secondary);
   color: var(--text-secondary);
@@ -531,17 +731,7 @@ body {
 .input-buttons {
   display: flex;
   gap: 8px;
-}
-
-.attach-btn:disabled,
-.send-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.attach-btn:disabled:hover,
-.send-btn:disabled:hover {
-  background: none;
+  align-items: center;
 }
 
 /* ========== SETTINGS PANEL ========== */
@@ -551,7 +741,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--settings-overlay-bg);
   z-index: 1999;
   animation: fadeIn 0.3s ease;
 }
@@ -580,10 +770,12 @@ body {
   padding: 8px;
   border-radius: 4px;
   color: var(--text-primary);
+  transition: all 0.2s;
 }
 
 .settings-close-btn:hover {
   background: var(--hover-bg);
+  transform: scale(1.1);
 }
 
 .settings-content {
@@ -618,6 +810,15 @@ body {
   font-family: inherit;
   background: var(--bg-primary);
   color: var(--text-primary);
+  transition: all 0.2s;
+}
+
+.settings-select:focus,
+.settings-input:focus,
+.settings-textarea:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
 .settings-textarea {
@@ -630,10 +831,18 @@ body {
   gap: 12px;
 }
 
+.theme-buttons .btn {
+  flex: 1;
+}
+
 .settings-actions {
   display: flex;
   gap: 12px;
   margin-top: 32px;
+}
+
+.settings-actions .btn {
+  flex: 1;
 }
 
 /* ========== AUTH FORM ========== */
@@ -644,6 +853,7 @@ body {
   justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
+  transition: all 0.3s ease;
 }
 
 .auth-container {
@@ -653,6 +863,7 @@ body {
   box-shadow: 0 10px 25px var(--shadow);
   width: 100%;
   max-width: 400px;
+  transition: all 0.3s ease;
 }
 
 .auth-container h1 {
@@ -679,7 +890,7 @@ body {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 14px;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
   background: var(--bg-primary);
   color: var(--text-primary);
 }
@@ -687,6 +898,7 @@ body {
 .auth-input:focus {
   outline: none;
   border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
 .radio-group {
@@ -702,10 +914,17 @@ body {
   cursor: pointer;
   font-weight: normal;
   color: var(--text-primary);
+  transition: all 0.2s;
+}
+
+.radio-label:hover {
+  color: var(--accent-color);
 }
 
 .radio-label input[type="radio"] {
   cursor: pointer;
+  width: 16px;
+  height: 16px;
 }
 
 /* ========== UI COMPONENTS ========== */
@@ -725,6 +944,8 @@ body {
 
 .btn-primary:hover:not(:disabled) {
   background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px var(--shadow);
 }
 
 .btn-secondary {
@@ -735,6 +956,7 @@ body {
 
 .btn-secondary:hover:not(:disabled) {
   background: var(--hover-bg);
+  transform: translateY(-1px);
 }
 
 .btn-danger {
@@ -744,6 +966,7 @@ body {
 
 .btn-danger:hover:not(:disabled) {
   background: #d32f2f;
+  transform: translateY(-1px);
 }
 
 .btn-small {
@@ -768,6 +991,7 @@ body {
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 
 /* ========== TOGGLE ========== */
@@ -867,9 +1091,11 @@ input:checked + .toggle-slider:before {
   border-radius: 50%;
   background: var(--accent-color);
   cursor: pointer;
+  transition: all 0.2s;
 }
 
 .slider-input::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
   background: var(--accent-hover);
 }
 
@@ -883,6 +1109,7 @@ input:checked + .toggle-slider:before {
   border-left: 3px solid #f44336;
   border-radius: 4px;
   margin: 16px 0;
+  animation: fadeIn 0.3s ease;
 }
 
 .error-icon {
@@ -910,6 +1137,7 @@ input:checked + .toggle-slider:before {
   font-size: 64px;
   margin-bottom: 16px;
   opacity: 0.5;
+  transition: all 0.3s ease;
 }
 
 .empty-state p {
@@ -953,6 +1181,8 @@ input:checked + .toggle-slider:before {
     position: fixed;
     transform: translateX(-100%);
     z-index: 1000;
+    width: 80%; /* Make sidebar take up most of screen on mobile */
+    max-width: 300px;
   }
   
   .sidebar.open {
@@ -967,8 +1197,11 @@ input:checked + .toggle-slider:before {
     width: 100%;
   }
   
+  /* Messages should be wider on mobile, but not touch edges */
   .message {
     max-width: 85%;
+    /* Ensure text wraps properly */
+    word-break: break-word; 
   }
   
   .chat-header {
@@ -979,12 +1212,85 @@ input:checked + .toggle-slider:before {
     font-size: 18px;
   }
   
+  /* Input Area Full Width on Mobile */
   .input-area {
     padding: 12px 16px;
+    width: 100%;
   }
   
-  .auth-container {
-    padding: 24px;
-    margin: 16px;
+  .input-container {
+    padding: 8px;
+    gap: 8px;
+    width: 100%;
+  }
+  
+  /* Touch-friendly buttons */
+  .attach-btn, 
+  .send-btn, 
+  .stop-btn {
+    padding: 8px; /* Increased padding for touch */
+    min-width: 44px; /* Minimum touch target size */
+    min-height: 44px;
+  }
+  
+  .send-btn, 
+  .stop-btn {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+  
+  .attach-btn {
+    font-size: 18px;
+  }
+  
+  .theme-toggle {
+    width: 40px;
+    height: 40px;
+    bottom: 15px;
+    right: 15px;
+  }
+  
+  .theme-toggle-icon {
+    font-size: 20px;
+  }
+  
+  /* Adjust copy button for mobile messages */
+  .copy-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+  
+  .copy-icon {
+    font-size: 12px;
+  }
+  
+  .copy-text {
+    font-size: 10px;
+  }
+}
+
+/* Extra small devices (phones in portrait, 320px - 480px) */
+@media (max-width: 480px) {
+  .message {
+    max-width: 90%; /* Even wider on very small screens */
+  }
+  
+  .input-container {
+    flex-wrap: wrap; /* Allow buttons to wrap if needed */
+  }
+  
+  .textarea {
+    width: 100%; /* Ensure textarea takes full width */
+    min-height: 40px;
+  }
+  
+  .input-buttons {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+  
+  .send-btn, .stop-btn {
+    flex-grow: 1; /* Make buttons stretch if space allows */
   }
 }

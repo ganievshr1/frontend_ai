@@ -2,44 +2,59 @@ import React, { useState, useRef, useEffect } from 'react';
 
 interface InputAreaProps {
   onSendMessage: (text: string) => void;
-  isLoading: boolean;
+  onStopGeneration?: () => void;  // Добавляем обработчик остановки генерации
+  isLoading?: boolean;  // Добавляем флаг загрузки
 }
 
-const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
-  // Храним значение поля в useState
-  const [inputValue, setInputValue] = useState('');
+const InputArea: React.FC<InputAreaProps> = ({ 
+  onSendMessage, 
+  onStopGeneration, 
+  isLoading = false 
+}) => {
+  const [inputValue, setInputValue] = useState<string>('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Автоподстройка высоты textarea
+  // Автоматическая подстройка высоты textarea (до 5 строк)
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       const scrollHeight = textareaRef.current.scrollHeight;
-      textareaRef.current.style.height = Math.min(scrollHeight, 5 * 24) + 'px';
+      const maxHeight = 5 * 24; // 5 строк по 24px
+      textareaRef.current.style.height = Math.min(scrollHeight, maxHeight) + 'px';
     }
   }, [inputValue]);
 
-  // Функция отправки сообщения
-  const handleSend = () => {
-    // Блокируем кнопку при пустом вводе или isLoading === true
-    if (inputValue.trim() && !isLoading) {
+  // Проверка, что сообщение не пустое и не состоит только из пробелов
+  const isMessageEmpty = (): boolean => {
+    return !inputValue.trim();
+  };
+
+  // Обработчик отправки сообщения
+  const handleSend = (): void => {
+    if (!isMessageEmpty() && !isLoading) {
       onSendMessage(inputValue.trim());
-      // Очищаем поле после отправки сообщения
       setInputValue('');
-      
-      // Возвращаем фокус на textarea после отправки
-      setTimeout(() => {
-        textareaRef.current?.focus();
-      }, 0);
     }
   };
 
-  // Обработка нажатия клавиш
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  // Обработчик остановки генерации
+  const handleStop = (): void => {
+    if (onStopGeneration) {
+      onStopGeneration();
+    }
+  };
+
+  // Обработчик нажатия клавиш
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
+    if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
       e.preventDefault();
       handleSend();
     }
+  };
+
+  // Обработчик изменения значения textarea
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
+    setInputValue(e.target.value);
   };
 
   return (
@@ -47,7 +62,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
       <div className="input-container">
         <button 
           className="attach-btn" 
-          title="Прикрепить изображение"
+          title="Прикрепить изображение (в разработке)"
           disabled={isLoading}
         >
           📎
@@ -56,30 +71,35 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
         <textarea
           ref={textareaRef}
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder={isLoading ? "GigaChat печатает..." : "Введите сообщение... (Shift+Enter для новой строки)"}
+          placeholder={isLoading ? "ИИ печатает ответ..." : "Введите сообщение... (Shift+Enter для новой строки)"}
           rows={1}
           className="textarea"
           disabled={isLoading}
         />
         
         <div className="input-buttons">
-          <button
-            className="stop-btn"
-            disabled
-            title="Остановить генерацию (в разработке)"
-          >
-            ⏹️
-          </button>
-          <button
-            className="send-btn"
-            onClick={handleSend}
-            // Блокируем кнопку при пустом вводе или isLoading === true
-            disabled={!inputValue.trim() || isLoading}
-          >
-            Отправить
-          </button>
+          {isLoading ? (
+            // Кнопка "Стоп" отображается во время генерации
+            <button
+              className="stop-btn active"
+              onClick={handleStop}
+              title="Остановить генерацию"
+            >
+              ⏹️ Стоп
+            </button>
+          ) : (
+            // Кнопка "Отправить" отображается в обычном режиме
+            <button
+              className="send-btn"
+              onClick={handleSend}
+              disabled={isMessageEmpty()}
+              title={isMessageEmpty() ? "Введите сообщение" : "Отправить сообщение"}
+            >
+              Отправить
+            </button>
+          )}
         </div>
       </div>
     </div>

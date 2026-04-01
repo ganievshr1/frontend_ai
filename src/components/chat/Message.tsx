@@ -1,25 +1,28 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-
-interface MessageType {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: string;
-}
+import { Message as MessageType } from '../../mocks/mockMessages';
 
 interface MessageProps {
   message: MessageType;
   variant: 'user' | 'assistant';
 }
 
-const Message: React.FC<MessageProps> = ({ message, variant }) => {
+const MessageComponent: React.FC<MessageProps> = ({ message, variant }) => {
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(message.content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(message.text);
+      setCopied(true);
+      setCopyError(false);
+      // Сбрасываем состояние через 2 секунды
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      setCopyError(true);
+      setTimeout(() => setCopyError(false), 2000);
+    }
   };
 
   const formatTime = (timestamp: string): string => {
@@ -51,19 +54,37 @@ const Message: React.FC<MessageProps> = ({ message, variant }) => {
             },
           }}
         >
-          {message.content}
+          {message.text}
         </ReactMarkdown>
       </div>
       
-      <button
-        className="copy-btn"
-        onClick={handleCopy}
-        title="Копировать"
-      >
-        {copied ? '✓' : '📋'}
-      </button>
+      {/* Кнопка копирования только для сообщений ассистента */}
+      {variant === 'assistant' && (
+        <button
+          className={`copy-btn ${copied ? 'copied' : ''} ${copyError ? 'error' : ''}`}
+          onClick={handleCopy}
+          title="Копировать текст"
+        >
+          {copied ? (
+            <>
+              <span className="copy-icon">✓</span>
+              <span className="copy-text">Скопировано!</span>
+            </>
+          ) : copyError ? (
+            <>
+              <span className="copy-icon">⚠️</span>
+              <span className="copy-text">Ошибка</span>
+            </>
+          ) : (
+            <>
+              <span className="copy-icon">📋</span>
+              <span className="copy-text">Копировать</span>
+            </>
+          )}
+        </button>
+      )}
     </div>
   );
 };
 
-export default Message;
+export default MessageComponent;

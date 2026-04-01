@@ -35,9 +35,19 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, onSave }
     return () => document.removeEventListener('keydown', handleEsc);
   }, [onClose]);
 
+  // Применяем тему при изменении
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', settings.theme);
+    localStorage.setItem('theme', settings.theme);
   }, [settings.theme]);
+
+  // Загружаем сохраненную тему при монтировании
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
+    if (savedTheme) {
+      setSettings(prev => ({ ...prev, theme: savedTheme }));
+    }
+  }, []);
 
   const handleSave = () => {
     onSave?.(settings);
@@ -131,19 +141,19 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, onSave }
           </div>
 
           <div className="settings-group">
-            <label>Тема</label>
+            <label>Тема оформления</label>
             <div className="theme-buttons">
               <Button
                 variant={settings.theme === 'light' ? 'primary' : 'secondary'}
                 onClick={() => setSettings({ ...settings, theme: 'light' })}
               >
-                Светлая
+                ☀️ Светлая
               </Button>
               <Button
                 variant={settings.theme === 'dark' ? 'primary' : 'secondary'}
                 onClick={() => setSettings({ ...settings, theme: 'dark' })}
               >
-                Тёмная
+                🌙 Тёмная
               </Button>
             </div>
           </div>

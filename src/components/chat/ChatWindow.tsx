@@ -1,52 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import MessageList from './MessageList';
 import InputArea from './InputArea';
 import SettingsPanel from '../settings/SettingsPanel';
 import EmptyState from '../ui/EmptyState';
+import { mockMessages, Message } from '../../mocks/mockMessages';
 import { mockChats } from '../../mocks/mockChats';
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: string;
-}
 
 interface ChatWindowProps {
   chatId: string;
 }
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ chatId }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<Message[]>(mockMessages);
+  const [isTyping, setIsTyping] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const currentChat = mockChats.find(chat => chat.id === chatId);
 
   const handleSendMessage = (text: string) => {
-    if (!text.trim() || isLoading) return;
-    
     const newUserMessage: Message = {
       id: Date.now().toString(),
-      role: 'user',
-      content: text,
+      text,
+      sender: 'user',
       timestamp: new Date().toISOString(),
     };
     
     setMessages(prev => [...prev, newUserMessage]);
-    setIsLoading(true);
+    setIsTyping(true);
     
-    setTimeout(() => {
-      const assistantResponse: Message = {
+    // Simulate AI response after 2 seconds
+    timeoutRef.current = setTimeout(() => {
+      const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: 'Это тестовый ответ от ИИ-ассистента. Здесь будет отображаться сгенерированный контент с поддержкой **markdown** и другими возможностями.',
+        text: 'Это тестовый ответ от ИИ-ассистента. Здесь будет отображаться сгенерированный контент с поддержкой **markdown** и другими возможностями.',
+        sender: 'assistant',
         timestamp: new Date().toISOString(),
       };
-      
-      setMessages(prev => [...prev, assistantResponse]);
-      setIsLoading(false);
-    }, 1500);
+      setMessages(prev => [...prev, aiResponse]);
+      setIsTyping(false);
+      timeoutRef.current = null;
+    }, 2000);
+  };
+
+  const handleStopGeneration = () => {
+    // Очищаем таймаут, если он существует
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setIsTyping(false);
+    
+    // Опционально: добавить сообщение о прерывании
+    const stopMessage: Message = {
+      id: Date.now().toString(),
+      text: '*Генерация ответа остановлена пользователем*',
+      sender: 'assistant',
+      timestamp: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, stopMessage]);
   };
 
   if (!currentChat) {
@@ -65,8 +77,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ chatId }) => {
         </button>
       </div>
       
-      <MessageList messages={messages} isLoading={isLoading} />
-      <InputArea onSendMessage={handleSendMessage} isLoading={isLoading} />
+      <MessageList messages={messages} isTyping={isTyping} />
+      <InputArea 
+        onSendMessage={handleSendMessage}
+        onStopGeneration={handleStopGeneration}
+        isLoading={isTyping}
+      />
       
       <SettingsPanel 
         isOpen={isSettingsOpen} 

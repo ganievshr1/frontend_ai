@@ -1,20 +1,14 @@
 import React, { useEffect, useRef } from 'react';
-import Message from './Message';
+import MessageComponent from './Message';  // Переименовываем импорт компонента
 import TypingIndicator from './TypingIndicator';
-
-interface MessageType {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: string;
-}
+import { Message as MessageType } from '../../mocks/mockMessages';  // Переименовываем импорт типа
 
 interface MessageListProps {
   messages: MessageType[];
-  isLoading: boolean;
+  isTyping: boolean;
 }
 
-const MessageList: React.FC<MessageListProps> = ({ messages, isLoading }) => {
+const MessageList: React.FC<MessageListProps> = ({ messages, isTyping }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -23,20 +17,18 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isLoading]);
+  }, [messages, isTyping]);
 
   return (
     <div className="message-list">
       {messages.map(message => (
-        <Message
+        <MessageComponent
           key={message.id}
           message={message}
-          // Передаем variant в зависимости от role
-          variant={message.role === 'user' ? 'user' : 'assistant'}
+          variant={message.sender === 'user' ? 'user' : 'assistant'}
         />
       ))}
-      {/* Передаем isVisible={isLoading} в TypingIndicator */}
-      <TypingIndicator isVisible={isLoading} />
+      {isTyping && <TypingIndicator />}
       <div ref={messagesEndRef} />
     </div>
   );
