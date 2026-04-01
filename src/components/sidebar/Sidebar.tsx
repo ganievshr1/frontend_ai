@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ChatList from './ChatList';
 import SearchInput from './SearchInput';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import { useChatStore } from '../../store/chatStore';
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  onDeleteChat?: (chatId: string) => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ onDeleteChat }) => {
   const [chatToDelete, setChatToDelete] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
   
   const {
     chats,
@@ -22,38 +28,46 @@ const Sidebar: React.FC = () => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase().trim();
     
-    // Поиск по названию чата
     if (chat.title.toLowerCase().includes(query)) return true;
-    
-    // Поиск по содержимому последнего сообщения
     const lastMessage = chat.messages[chat.messages.length - 1];
     if (lastMessage && lastMessage.text.toLowerCase().includes(query)) return true;
     
     return false;
   });
 
-  const handleNewChat = () => {
+  const handleNewChat = useCallback(() => {
     addChat();
-  };
+  }, [addChat]);
 
-  const handleDeleteClick = (chatId: string) => {
+  const handleSelectChat = useCallback((chatId: string) => {
+    console.log('Sidebar: selecting chat', chatId);
+    
+    // Если это уже активный чат - ничего не делаем
+    if (chatId === activeChatId) return;
+    
+    // Обновляем активный чат (URL обновится в AppLayout через useEffect)
+    setActiveChat(chatId);
+  }, [activeChatId, setActiveChat]);
+
+  const handleDeleteClick = useCallback((chatId: string) => {
     setChatToDelete(chatId);
-  };
+  }, []);
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = useCallback(() => {
     if (chatToDelete) {
       deleteChat(chatToDelete);
+      onDeleteChat?.(chatToDelete);
       setChatToDelete(null);
     }
-  };
+  }, [chatToDelete, deleteChat, onDeleteChat]);
 
-  const handleCancelDelete = () => {
+  const handleCancelDelete = useCallback(() => {
     setChatToDelete(null);
-  };
+  }, []);
 
-  const handleEditChat = (chatId: string, newTitle: string) => {
+  const handleEditChat = useCallback((chatId: string, newTitle: string) => {
     updateChatTitle(chatId, newTitle);
-  };
+  }, [updateChatTitle]);
 
   return (
     <div className="sidebar-container">
@@ -83,7 +97,7 @@ const Sidebar: React.FC = () => {
       <ChatList
         chats={filteredChats}
         selectedChatId={activeChatId}
-        onSelectChat={setActiveChat}
+        onSelectChat={handleSelectChat}
         onDeleteChat={handleDeleteClick}
         onEditChat={handleEditChat}
       />

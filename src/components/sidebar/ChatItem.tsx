@@ -43,19 +43,37 @@ const ChatItem: React.FC<ChatItemProps> = ({
 
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // 👈 Добавить
     if (editTitle.trim() && editTitle.trim() !== chat.title) {
       onEdit(editTitle.trim());
     }
     setIsEditing(false);
   };
 
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 👈 Добавить
+    setIsEditing(true);
+    setEditTitle(chat.title);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 👈 Добавить
+    onDelete();
+  };
+
+  const handleSelect = () => {
+    if (!isEditing) {
+      onSelect();
+    }
+  };
+
   return (
     <div
       className={`chat-item ${isSelected ? 'selected' : ''}`}
-      onClick={() => !isEditing && onSelect()}
+      onClick={handleSelect}
     >
       {isEditing ? (
-        <form onSubmit={handleEditSubmit} className="edit-form">
+        <form onSubmit={handleEditSubmit} className="edit-form" onClick={(e) => e.stopPropagation()}>
           <input
             type="text"
             value={editTitle}
@@ -73,24 +91,17 @@ const ChatItem: React.FC<ChatItemProps> = ({
             <div className="chat-preview">{getLastMessagePreview()}</div>
             <div className="chat-date">{formatDate(chat.lastMessageDate)}</div>
           </div>
-          <div className="chat-actions">
+          <div className="chat-actions" onClick={(e) => e.stopPropagation()}>
             <button
               className="edit-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsEditing(true);
-                setEditTitle(chat.title);
-              }}
+              onClick={handleEditClick}
               title="Редактировать название"
             >
               ✏️
             </button>
             <button
               className="delete-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
+              onClick={handleDeleteClick}
               title="Удалить чат"
             >
               🗑️

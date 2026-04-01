@@ -34,6 +34,9 @@ export const useChat = () => {
     setLoading(false);
   };
 
+  // Добавляем лог для отладки
+  console.log('useChat - activeChatId:', activeChatId, 'activeChat:', activeChat?.id);
+
   return {
     chats,
     activeChat,

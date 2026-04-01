@@ -26,6 +26,8 @@ const ChatList: React.FC<ChatListProps> = ({
     );
   }
 
+  console.log('ChatList render, chats:', chats.map(c => c.id)); // 👈 Лог для отладки
+
   return (
     <div className="chat-list">
       {chats.map(chat => (
@@ -33,7 +35,10 @@ const ChatList: React.FC<ChatListProps> = ({
           key={chat.id}
           chat={chat}
           isSelected={selectedChatId === chat.id}
-          onSelect={() => onSelectChat(chat.id)}
+          onSelect={() => {
+            console.log('ChatList: onSelect called for chat', chat.id); // 👈 Лог
+            onSelectChat(chat.id);
+          }}
           onDelete={() => onDeleteChat(chat.id)}
           onEdit={(newTitle) => onEditChat(chat.id, newTitle)}
         />

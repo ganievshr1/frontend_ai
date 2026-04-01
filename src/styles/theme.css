@@ -28,6 +28,8 @@
   --theme-toggle-bg: #ffffff;
   --theme-toggle-shadow: rgba(0, 0, 0, 0.2);
   --settings-overlay-bg: rgba(0, 0, 0, 0.5);
+  --logout-btn-bg: #ffffff;
+  --logout-btn-hover: #e8e8e8;
 }
 
 [data-theme="dark"] {
@@ -58,6 +60,8 @@
   --theme-toggle-bg: #2d2d2d;
   --theme-toggle-shadow: rgba(0, 0, 0, 0.4);
   --settings-overlay-bg: rgba(0, 0, 0, 0.7);
+  --logout-btn-bg: #2d2d2d;
+  --logout-btn-hover: #3d3d3d;
 }
 
 /* ========== GLOBAL STYLES ========== */
@@ -196,6 +200,33 @@ body {
 
 .theme-toggle:hover .theme-toggle-icon {
   transform: rotate(15deg);
+}
+
+/* ========== LOGOUT BUTTON ========== */
+.logout-btn {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+  background: var(--logout-btn-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: all 0.3s ease;
+  font-size: 24px;
+  color: var(--text-primary);
+}
+
+.logout-btn:hover {
+  transform: scale(1.1);
+  background: var(--logout-btn-hover);
+  box-shadow: 0 4px 12px var(--shadow);
 }
 
 /* ========== SIDEBAR COMPONENTS ========== */
@@ -879,6 +910,26 @@ body {
   flex: 1;
 }
 
+/* ========== STORAGE MANAGEMENT BUTTONS ========== */
+.storage-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.storage-buttons .btn {
+  flex: 1;
+  min-width: 100px;
+}
+
+.storage-hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
 .settings-actions {
   display: flex;
   gap: 12px;
@@ -1369,6 +1420,14 @@ input:checked + .toggle-slider:before {
   .theme-toggle-icon {
     font-size: 28px;
   }
+  
+  .logout-btn {
+    width: 56px;
+    height: 56px;
+    bottom: 24px;
+    left: 24px;
+    font-size: 28px;
+  }
 }
 
 /* Tablet (768px - 1024px) */
@@ -1530,6 +1589,14 @@ input:checked + .toggle-slider:before {
     font-size: 20px;
   }
   
+  .logout-btn {
+    width: 40px;
+    height: 40px;
+    bottom: 15px;
+    left: 15px;
+    font-size: 20px;
+  }
+  
   .new-chat-btn {
     margin: 12px;
     padding: 10px;
@@ -1597,6 +1664,20 @@ input:checked + .toggle-slider:before {
   
   .theme-buttons {
     gap: 8px;
+  }
+  
+  .storage-buttons {
+    gap: 8px;
+  }
+  
+  .storage-buttons .btn {
+    min-width: 80px;
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+  
+  .storage-hint {
+    font-size: 11px;
   }
   
   .settings-actions {
@@ -1805,6 +1886,14 @@ input:checked + .toggle-slider:before {
     font-size: 18px;
   }
   
+  .logout-btn {
+    width: 36px;
+    height: 36px;
+    bottom: 12px;
+    left: 12px;
+    font-size: 18px;
+  }
+  
   .new-chat-btn {
     margin: 10px;
     padding: 8px;
@@ -1873,6 +1962,16 @@ input:checked + .toggle-slider:before {
     height: 28px;
     font-size: 12px;
   }
+  
+  .storage-buttons .btn {
+    min-width: 70px;
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+  
+  .storage-hint {
+    font-size: 10px;
+  }
 }
 
 /* Touch Device Optimizations */
@@ -1887,7 +1986,9 @@ input:checked + .toggle-slider:before {
   .edit-btn,
   .delete-btn,
   .burger-menu,
-  .theme-toggle {
+  .theme-toggle,
+  .logout-btn,
+  .storage-buttons .btn {
     min-height: 44px;
     min-width: 44px;
   }
@@ -1992,6 +2093,13 @@ input:checked + .toggle-slider:before {
     right: 10px;
   }
   
+  .logout-btn {
+    width: 36px;
+    height: 36px;
+    bottom: 10px;
+    left: 10px;
+  }
+  
   .settings-drawer {
     width: 80%;
   }
@@ -2017,6 +2125,16 @@ input:checked + .toggle-slider:before {
   
   .chat-list-empty {
     padding: 20px;
+  }
+  
+  .storage-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .storage-buttons .btn {
+    font-size: 11px;
+    padding: 5px 8px;
   }
 }
 
