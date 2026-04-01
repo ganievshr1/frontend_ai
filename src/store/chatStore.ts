@@ -39,6 +39,27 @@ const createInitialChats = (): Chat[] => {
   }));
 };
 
+// Функция для генерации названия чата из сообщения
+const generateChatTitleFromMessage = (messageText: string, index: number): string => {
+  const trimmedText = messageText.trim();
+  
+  // Если сообщение пустое или слишком короткое (меньше 3 символов)
+  if (!trimmedText || trimmedText.length < 3) {
+    return `Диалог ${index + 1}`;
+  }
+  
+  // Удаляем лишние пробелы и переносы строк
+  const cleanText = trimmedText.replace(/\s+/g, ' ').replace(/\n/g, ' ');
+  
+  // Обрезаем до 35 символов (не 40, чтобы добавить многоточие)
+  let title = cleanText;
+  if (cleanText.length > 35) {
+    title = cleanText.substring(0, 35) + '...';
+  }
+  
+  return title;
+};
+
 // Интерфейс для сохраненных данных
 interface StoredData {
   state: {
@@ -161,20 +182,36 @@ export const useChatStore = create<ChatStore>()(
         });
       },
 
-      // Add message to chat
+      // Add message to chat (с обновлением названия для первого сообщения)
       addMessage: async (chatId: string, message: Omit<Message, 'id' | 'timestamp'>) => {
         console.log('💬 Добавление сообщения в чат:', chatId);
+        
+        const chat = get().chats.find(c => c.id === chatId);
+        
         const newMessage: Message = {
           ...message,
           id: Date.now().toString(),
           timestamp: new Date().toISOString(),
         };
 
+        // Если это первое сообщение в чате и оно от пользователя
+        const isFirstMessage = chat && chat.messages.length === 0;
+        let updatedTitle = chat?.title;
+        
+        if (isFirstMessage && message.sender === 'user') {
+          // Генерируем новое название на основе первого сообщения
+          const chatIndex = get().chats.findIndex(c => c.id === chatId);
+          const newTitle = generateChatTitleFromMessage(message.text, chatIndex);
+          console.log('🏷️ Генерация названия чата:', newTitle);
+          updatedTitle = newTitle;
+        }
+
         set((state) => ({
           chats: state.chats.map(chat =>
             chat.id === chatId
               ? {
                   ...chat,
+                  title: updatedTitle || chat.title,
                   messages: [...chat.messages, newMessage],
                   lastMessageDate: newMessage.timestamp,
                 }
