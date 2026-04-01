@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Button from '../ui/Button';
 import ErrorMessage from '../ui/ErrorMessage';
+import { useChatStore } from '../../store/chatStore';
 
 interface AuthData {
   credentials: string;
@@ -16,6 +17,8 @@ const AuthForm: React.FC<AuthFormProps> = ({ onLogin }) => {
   const [scope, setScope] = useState('GIGACHAT_API_PERS');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  const setCredentialsInStore = useChatStore((state) => state.setCredentials);
 
   const validateBase64 = (str: string): boolean => {
     const base64Regex = /^[A-Za-z0-9+/=]+$/;
@@ -38,7 +41,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ onLogin }) => {
     
     setIsLoading(true);
     
-    // Simulate API call
+    // Сохраняем credentials в store
+    setCredentialsInStore(credentials);
+    
     setTimeout(() => {
       setIsLoading(false);
       onLogin({ credentials, scope });

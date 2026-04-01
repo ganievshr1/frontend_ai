@@ -13,6 +13,7 @@ export const useChat = () => {
     addMessage,
     setLoading,
     clearError,
+    stopGeneration,
   } = useChatStore();
 
   const activeChat = activeChatId
@@ -29,13 +30,6 @@ export const useChat = () => {
       sender: 'user',
     });
   };
-
-  const stopGeneration = () => {
-    setLoading(false);
-  };
-
-  // Добавляем лог для отладки
-  console.log('useChat - activeChatId:', activeChatId, 'activeChat:', activeChat?.id);
 
   return {
     chats,

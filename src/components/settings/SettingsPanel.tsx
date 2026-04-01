@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../ui/Button';
+import { useChatStore } from '../../store/chatStore';
 
 interface Settings {
   model: string;
@@ -16,65 +17,35 @@ interface SettingsPanelProps {
   onSave?: (settings: Settings) => void;
 }
 
-// Ключ для хранения всех настроек в localStorage
-const SETTINGS_STORAGE_KEY = 'app-settings';
-
-// Функция для загрузки настроек из localStorage
-const loadSettingsFromStorage = (): Settings | null => {
-  try {
-    const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      // Валидация структуры данных
-      if (parsed && typeof parsed === 'object' && 
-          parsed.model && typeof parsed.temperature === 'number') {
-        return parsed as Settings;
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error('❌ Ошибка загрузки настроек:', error);
-    return null;
-  }
-};
-
-// Функция для сохранения настроек в localStorage
-const saveSettingsToStorage = (settings: Settings): void => {
-  try {
-    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
-    console.log('💾 Настройки сохранены:', settings);
-  } catch (error) {
-    console.error('❌ Ошибка сохранения настроек:', error);
-  }
-};
-
-// Настройки по умолчанию
-const defaultSettings: Settings = {
-  model: 'GigaChat',
-  temperature: 0.7,
-  topP: 0.9,
-  maxTokens: 2048,
-  systemPrompt: 'Вы полезный ассистент.',
-  theme: 'light',
-};
-
 const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, onSave }) => {
-  const [settings, setSettings] = useState<Settings>(defaultSettings);
+  const storeSettings = useChatStore((state) => state.settings);
+  const updateSettings = useChatStore((state) => state.updateSettings);
+  
+  const [settings, setSettings] = useState<Settings>({
+    model: storeSettings.model,
+    temperature: storeSettings.temperature,
+    topP: storeSettings.topP,
+    maxTokens: storeSettings.maxTokens,
+    systemPrompt: storeSettings.systemPrompt,
+    theme: (localStorage.getItem('theme') as 'light' | 'dark') || 'light',
+  });
 
-  // Загружаем настройки при монтировании
+  // Синхронизация с store при изменении
   useEffect(() => {
-    const loaded = loadSettingsFromStorage();
-    if (loaded) {
-      console.log('✅ Настройки загружены из localStorage');
-      setSettings(loaded);
-    } else {
-      console.log('📦 Используются настройки по умолчанию');
-    }
-  }, []);
+    setSettings({
+      model: storeSettings.model,
+      temperature: storeSettings.temperature,
+      topP: storeSettings.topP,
+      maxTokens: storeSettings.maxTokens,
+      systemPrompt: storeSettings.systemPrompt,
+      theme: settings.theme,
+    });
+  }, [storeSettings]);
 
   // Применяем тему при изменении
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', settings.theme);
+    localStorage.setItem('theme', settings.theme);
   }, [settings.theme]);
 
   // Обработчик ESC
@@ -87,26 +58,45 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, onSave }
   }, [onClose]);
 
   const handleSave = () => {
-    // Сохраняем в localStorage
-    saveSettingsToStorage(settings);
-    // Вызываем callback
+    // Сохраняем настройки в store
+    updateSettings({
+      model: settings.model,
+      temperature: settings.temperature,
+      topP: settings.topP,
+      maxTokens: settings.maxTokens,
+      systemPrompt: settings.systemPrompt,
+    });
     onSave?.(settings);
-    // Закрываем панель
     onClose();
   };
 
   const handleReset = () => {
+    const defaultSettings = {
+      model: 'GigaChat',
+      temperature: 0.7,
+      topP: 0.9,
+      maxTokens: 2048,
+      systemPrompt: 'Вы полезный ассистент.',
+      theme: 'light' as const,
+    };
     setSettings(defaultSettings);
-    saveSettingsToStorage(defaultSettings);
-    console.log('🔄 Настройки сброшены к значениям по умолчанию');
+    updateSettings(defaultSettings);
   };
 
   const handleClearStorage = () => {
-    // Используем window.confirm вместо confirm (исправление ESLint)
     if (window.confirm('Вы уверены, что хотите очистить все сохраненные настройки?')) {
       try {
-        localStorage.removeItem(SETTINGS_STORAGE_KEY);
+        localStorage.removeItem('app-settings');
+        const defaultSettings = {
+          model: 'GigaChat',
+          temperature: 0.7,
+          topP: 0.9,
+          maxTokens: 2048,
+          systemPrompt: 'Вы полезный ассистент.',
+          theme: 'light' as const,
+        };
         setSettings(defaultSettings);
+        updateSettings(defaultSettings);
         console.log('🗑️ Настройки очищены');
       } catch (error) {
         console.error('❌ Ошибка очистки настроек:', error);

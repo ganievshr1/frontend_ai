@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 
 interface InputAreaProps {
   onSendMessage: (text: string) => void;
-  onStopGeneration?: () => void;  // Добавляем обработчик остановки генерации
-  isLoading?: boolean;  // Добавляем флаг загрузки
+  onStopGeneration?: () => void;
+  isLoading?: boolean;
 }
 
 const InputArea: React.FC<InputAreaProps> = ({ 
@@ -14,22 +14,19 @@ const InputArea: React.FC<InputAreaProps> = ({
   const [inputValue, setInputValue] = useState<string>('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Автоматическая подстройка высоты textarea (до 5 строк)
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       const scrollHeight = textareaRef.current.scrollHeight;
-      const maxHeight = 5 * 24; // 5 строк по 24px
+      const maxHeight = 5 * 24;
       textareaRef.current.style.height = Math.min(scrollHeight, maxHeight) + 'px';
     }
   }, [inputValue]);
 
-  // Проверка, что сообщение не пустое и не состоит только из пробелов
   const isMessageEmpty = (): boolean => {
     return !inputValue.trim();
   };
 
-  // Обработчик отправки сообщения
   const handleSend = (): void => {
     if (!isMessageEmpty() && !isLoading) {
       onSendMessage(inputValue.trim());
@@ -37,14 +34,12 @@ const InputArea: React.FC<InputAreaProps> = ({
     }
   };
 
-  // Обработчик остановки генерации
   const handleStop = (): void => {
     if (onStopGeneration) {
       onStopGeneration();
     }
   };
 
-  // Обработчик нажатия клавиш
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
     if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
       e.preventDefault();
@@ -52,7 +47,6 @@ const InputArea: React.FC<InputAreaProps> = ({
     }
   };
 
-  // Обработчик изменения значения textarea
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
     setInputValue(e.target.value);
   };
@@ -81,7 +75,6 @@ const InputArea: React.FC<InputAreaProps> = ({
         
         <div className="input-buttons">
           {isLoading ? (
-            // Кнопка "Стоп" отображается во время генерации
             <button
               className="stop-btn active"
               onClick={handleStop}
@@ -90,7 +83,6 @@ const InputArea: React.FC<InputAreaProps> = ({
               ⏹️ Стоп
             </button>
           ) : (
-            // Кнопка "Отправить" отображается в обычном режиме
             <button
               className="send-btn"
               onClick={handleSend}
