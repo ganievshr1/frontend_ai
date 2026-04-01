@@ -1,43 +1,59 @@
 import React, { useState } from 'react';
 import ChatList from './ChatList';
 import SearchInput from './SearchInput';
-import { mockChats, Chat } from '../../mocks/mockChats';
+import ConfirmDialog from '../ui/ConfirmDialog';
+import { useChatStore } from '../../store/chatStore';
 
-interface SidebarProps {
-  selectedChatId: string;
-  onSelectChat: (chatId: string) => void;
-}
-
-const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, onSelectChat }) => {
+const Sidebar: React.FC = () => {
+  const [chatToDelete, setChatToDelete] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [chats, setChats] = useState<Chat[]>(mockChats);
+  
+  const {
+    chats,
+    activeChatId,
+    addChat,
+    updateChatTitle,
+    deleteChat,
+    setActiveChat,
+  } = useChatStore();
+
+  // Фильтрация чатов по поисковому запросу
+  const filteredChats = chats.filter(chat => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase().trim();
+    
+    // Поиск по названию чата
+    if (chat.title.toLowerCase().includes(query)) return true;
+    
+    // Поиск по содержимому последнего сообщения
+    const lastMessage = chat.messages[chat.messages.length - 1];
+    if (lastMessage && lastMessage.text.toLowerCase().includes(query)) return true;
+    
+    return false;
+  });
 
   const handleNewChat = () => {
-    const newChat: Chat = {
-      id: Date.now().toString(),
-      title: 'Новый чат',
-      lastMessageDate: new Date().toISOString(),
-    };
-    setChats([newChat, ...chats]);
-    onSelectChat(newChat.id);
+    addChat();
   };
 
-  const handleDeleteChat = (chatId: string) => {
-    setChats(chats.filter(chat => chat.id !== chatId));
-    if (selectedChatId === chatId && chats.length > 1) {
-      onSelectChat(chats[0].id);
+  const handleDeleteClick = (chatId: string) => {
+    setChatToDelete(chatId);
+  };
+
+  const handleConfirmDelete = () => {
+    if (chatToDelete) {
+      deleteChat(chatToDelete);
+      setChatToDelete(null);
     }
   };
 
-  const handleEditChat = (chatId: string, newTitle: string) => {
-    setChats(chats.map(chat => 
-      chat.id === chatId ? { ...chat, title: newTitle } : chat
-    ));
+  const handleCancelDelete = () => {
+    setChatToDelete(null);
   };
 
-  const filteredChats = chats.filter(chat =>
-    chat.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleEditChat = (chatId: string, newTitle: string) => {
+    updateChatTitle(chatId, newTitle);
+  };
 
   return (
     <div className="sidebar-container">
@@ -45,13 +61,39 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, onSelectChat }) => {
         <span className="plus-icon">+</span>
         Новый чат
       </button>
-      <SearchInput value={searchQuery} onChange={setSearchQuery} />
+      
+      <div className="search-container">
+        <div className="search-wrapper">
+          <span className="search-icon">🔍</span>
+          <input
+            type="text"
+            placeholder="Поиск по названию или сообщению..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="search-input"
+          />
+          {searchQuery && (
+            <button className="search-clear" onClick={() => setSearchQuery('')} title="Очистить">
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+      
       <ChatList
         chats={filteredChats}
-        selectedChatId={selectedChatId}
-        onSelectChat={onSelectChat}
-        onDeleteChat={handleDeleteChat}
+        selectedChatId={activeChatId}
+        onSelectChat={setActiveChat}
+        onDeleteChat={handleDeleteClick}
         onEditChat={handleEditChat}
+      />
+      
+      <ConfirmDialog
+        isOpen={!!chatToDelete}
+        title="Удаление чата"
+        message="Вы уверены, что хотите удалить этот чат? Все сообщения будут потеряны без возможности восстановления."
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
       />
     </div>
   );

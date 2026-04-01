@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Chat } from '../../mocks/mockChats';
+import { Chat } from '../../types';
 
 interface ChatItemProps {
   chat: Chat;
@@ -32,12 +32,21 @@ const ChatItem: React.FC<ChatItemProps> = ({
     return date.toLocaleDateString();
   };
 
+  const getLastMessagePreview = (): string => {
+    const lastMessage = chat.messages[chat.messages.length - 1];
+    if (!lastMessage) return 'Нет сообщений';
+    const preview = lastMessage.text.length > 50 
+      ? lastMessage.text.substring(0, 50) + '...' 
+      : lastMessage.text;
+    return preview;
+  };
+
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (editTitle.trim()) {
+    if (editTitle.trim() && editTitle.trim() !== chat.title) {
       onEdit(editTitle.trim());
-      setIsEditing(false);
     }
+    setIsEditing(false);
   };
 
   return (
@@ -54,12 +63,14 @@ const ChatItem: React.FC<ChatItemProps> = ({
             autoFocus
             onBlur={handleEditSubmit}
             className="edit-input"
+            maxLength={50}
           />
         </form>
       ) : (
         <>
           <div className="chat-info">
             <div className="chat-title">{chat.title}</div>
+            <div className="chat-preview">{getLastMessagePreview()}</div>
             <div className="chat-date">{formatDate(chat.lastMessageDate)}</div>
           </div>
           <div className="chat-actions">
@@ -68,7 +79,9 @@ const ChatItem: React.FC<ChatItemProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 setIsEditing(true);
+                setEditTitle(chat.title);
               }}
+              title="Редактировать название"
             >
               ✏️
             </button>
@@ -78,6 +91,7 @@ const ChatItem: React.FC<ChatItemProps> = ({
                 e.stopPropagation();
                 onDelete();
               }}
+              title="Удалить чат"
             >
               🗑️
             </button>

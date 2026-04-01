@@ -1,27 +1,22 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Message as MessageType } from '../../mocks/mockMessages';
+import { Message } from '../../types';
 
 interface MessageProps {
-  message: MessageType;
+  message: Message;
   variant: 'user' | 'assistant';
 }
 
 const MessageComponent: React.FC<MessageProps> = ({ message, variant }) => {
   const [copied, setCopied] = useState(false);
-  const [copyError, setCopyError] = useState(false);
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(message.text);
       setCopied(true);
-      setCopyError(false);
-      // Сбрасываем состояние через 2 секунды
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy text: ', err);
-      setCopyError(true);
-      setTimeout(() => setCopyError(false), 2000);
     }
   };
 
@@ -58,29 +53,14 @@ const MessageComponent: React.FC<MessageProps> = ({ message, variant }) => {
         </ReactMarkdown>
       </div>
       
-      {/* Кнопка копирования только для сообщений ассистента */}
       {variant === 'assistant' && (
         <button
-          className={`copy-btn ${copied ? 'copied' : ''} ${copyError ? 'error' : ''}`}
+          className={`copy-btn ${copied ? 'copied' : ''}`}
           onClick={handleCopy}
           title="Копировать текст"
         >
-          {copied ? (
-            <>
-              <span className="copy-icon">✓</span>
-              <span className="copy-text">Скопировано!</span>
-            </>
-          ) : copyError ? (
-            <>
-              <span className="copy-icon">⚠️</span>
-              <span className="copy-text">Ошибка</span>
-            </>
-          ) : (
-            <>
-              <span className="copy-icon">📋</span>
-              <span className="copy-text">Копировать</span>
-            </>
-          )}
+          <span className="copy-icon">{copied ? '✓' : '📋'}</span>
+          <span className="copy-text">{copied ? 'Скопировано!' : 'Копировать'}</span>
         </button>
       )}
     </div>

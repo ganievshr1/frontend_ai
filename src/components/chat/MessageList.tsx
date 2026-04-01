@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import MessageComponent from './Message';  // Переименовываем импорт компонента
+import MessageComponent from './Message';
 import TypingIndicator from './TypingIndicator';
-import { Message as MessageType } from '../../mocks/mockMessages';  // Переименовываем импорт типа
+import { Message } from '../../types';
 
 interface MessageListProps {
-  messages: MessageType[];
+  messages: Message[];
   isTyping: boolean;
 }
 

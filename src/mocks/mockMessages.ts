@@ -1,10 +1,7 @@
-// Экспортируем интерфейс Message
-export interface Message {
-  id: string;
-  text: string;
-  sender: 'user' | 'assistant';
-  timestamp: string;
-}
+import { Message } from '../types';
+
+// Реэкспортируем тип для обратной совместимости
+export type { Message };
 
 export const mockMessages: Message[] = [
   {
