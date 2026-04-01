@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { Chat, Message } from '../types';
 import { mockChats as initialMockChats } from '../mocks/mockChats';
 import { mockMessages as initialMockMessages } from '../mocks/mockMessages';
@@ -24,38 +24,106 @@ interface ChatStore {
   setSearchQuery: (query: string) => void;
   resetStore: () => void;
   getFilteredChats: () => Chat[];
+  exportToLocalStorage: () => void;
+  importFromLocalStorage: () => void;
+  clearLocalStorage: () => void;
 }
 
 // Создаем начальные чаты с сообщениями
 const createInitialChats = (): Chat[] => {
   return initialMockChats.map(chat => ({
     ...chat,
-    messages: chat.id === '1' ? initialMockMessages : [],
+    messages: chat.id === '1' ? [...initialMockMessages] : [],
     isLoading: false,
     error: null,
   }));
+};
+
+// Интерфейс для сохраненных данных
+interface StoredData {
+  state: {
+    chats: Chat[];
+    activeChatId: string | null;
+  };
+}
+
+// Функция для безопасного парсинга JSON
+const safeJSONParse = (data: string | null): StoredData | null => {
+  if (!data) return null;
+  
+  try {
+    const parsed = JSON.parse(data);
+    if (parsed && typeof parsed === 'object' && parsed.state && Array.isArray(parsed.state.chats)) {
+      return parsed as StoredData;
+    }
+    return null;
+  } catch (error) {
+    console.error('❌ Ошибка парсинга localStorage:', error);
+    return null;
+  }
+};
+
+// Функция для загрузки данных из localStorage
+const loadFromLocalStorage = (): { chats: Chat[]; activeChatId: string | null } | null => {
+  try {
+    const stored = localStorage.getItem('chat-storage');
+    if (!stored) return null;
+    
+    const parsed = safeJSONParse(stored);
+    
+    if (parsed && parsed.state && parsed.state.chats.length > 0) {
+      console.log('✅ Загружено из localStorage:', parsed.state.chats.length, 'чатов');
+      return {
+        chats: parsed.state.chats,
+        activeChatId: parsed.state.activeChatId,
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('❌ Ошибка загрузки из localStorage:', error);
+    return null;
+  }
+};
+
+// Загружаем начальное состояние
+const getInitialState = () => {
+  const loaded = loadFromLocalStorage();
+  if (loaded && loaded.chats.length > 0) {
+    return {
+      chats: loaded.chats,
+      activeChatId: loaded.activeChatId,
+    };
+  }
+  const initialChats = createInitialChats();
+  return {
+    chats: initialChats,
+    activeChatId: initialChats[0]?.id || null,
+  };
 };
 
 export const useChatStore = create<ChatStore>()(
   persist(
     (set, get) => ({
       // Initial state
-      chats: createInitialChats(),
-      activeChatId: '1',
+      chats: getInitialState().chats,
+      activeChatId: getInitialState().activeChatId,
       isLoading: false,
       error: null,
       searchQuery: '',
 
       // Set active chat
       setActiveChat: (chatId: string) => {
+        console.log('🔄 Смена активного чата:', chatId);
         set({ activeChatId: chatId });
       },
 
       // Add new chat
       addChat: (title?: string) => {
+        console.log('➕ Создание нового чата');
+        const currentChats = get().chats;
         const newChat: Chat = {
           id: Date.now().toString(),
-          title: title || `Новый чат ${get().chats.length + 1}`,
+          title: title || `Новый чат ${currentChats.length + 1}`,
           lastMessageDate: new Date().toISOString(),
           messages: [],
           isLoading: false,
@@ -69,6 +137,7 @@ export const useChatStore = create<ChatStore>()(
 
       // Update chat title
       updateChatTitle: (chatId: string, newTitle: string) => {
+        console.log('✏️ Обновление названия чата:', chatId, newTitle);
         set((state) => ({
           chats: state.chats.map(chat =>
             chat.id === chatId ? { ...chat, title: newTitle } : chat
@@ -78,6 +147,7 @@ export const useChatStore = create<ChatStore>()(
 
       // Delete chat
       deleteChat: (chatId: string) => {
+        console.log('🗑️ Удаление чата:', chatId);
         set((state) => {
           const newChats = state.chats.filter(chat => chat.id !== chatId);
           const newActiveChatId = state.activeChatId === chatId
@@ -93,6 +163,7 @@ export const useChatStore = create<ChatStore>()(
 
       // Add message to chat
       addMessage: async (chatId: string, message: Omit<Message, 'id' | 'timestamp'>) => {
+        console.log('💬 Добавление сообщения в чат:', chatId);
         const newMessage: Message = {
           ...message,
           id: Date.now().toString(),
@@ -177,34 +248,125 @@ export const useChatStore = create<ChatStore>()(
         
         const query = searchQuery.toLowerCase().trim();
         return chats.filter(chat => {
-          // Поиск по названию чата
           if (chat.title.toLowerCase().includes(query)) return true;
-          
-          // Поиск по содержимому последнего сообщения
           const lastMessage = chat.messages[chat.messages.length - 1];
           if (lastMessage && lastMessage.text.toLowerCase().includes(query)) return true;
-          
           return false;
         });
       },
 
+      // Export to localStorage (manual)
+      exportToLocalStorage: () => {
+        try {
+          console.log('💾 Ручной экспорт в localStorage');
+          const state = {
+            chats: get().chats,
+            activeChatId: get().activeChatId,
+          };
+          localStorage.setItem('chat-storage', JSON.stringify({ state }));
+          console.log('✅ Данные успешно сохранены');
+          set({ error: null });
+        } catch (error) {
+          console.error('❌ Ошибка экспорта:', error);
+          set({ error: 'Не удалось сохранить данные' });
+        }
+      },
+
+      // Import from localStorage (manual)
+      importFromLocalStorage: () => {
+        try {
+          console.log('📂 Ручной импорт из localStorage');
+          const stored = localStorage.getItem('chat-storage');
+          if (!stored) {
+            set({ error: 'Нет сохраненных данных' });
+            return;
+          }
+          
+          const parsed = safeJSONParse(stored);
+          
+          if (parsed && parsed.state && Array.isArray(parsed.state.chats)) {
+            set({
+              chats: parsed.state.chats,
+              activeChatId: parsed.state.activeChatId,
+              error: null,
+            });
+            console.log('✅ Данные успешно загружены');
+          } else {
+            throw new Error('Неверная структура данных');
+          }
+        } catch (error) {
+          console.error('❌ Ошибка импорта:', error);
+          set({ error: 'Не удалось загрузить данные' });
+        }
+      },
+
+      // Clear localStorage
+      clearLocalStorage: () => {
+        try {
+          console.log('🗑️ Очистка localStorage');
+          localStorage.removeItem('chat-storage');
+          const initialChats = createInitialChats();
+          set({
+            chats: initialChats,
+            activeChatId: initialChats[0]?.id || null,
+            error: null,
+          });
+          console.log('✅ localStorage очищен');
+        } catch (error) {
+          console.error('❌ Ошибка очистки:', error);
+          set({ error: 'Не удалось очистить данные' });
+        }
+      },
+
       // Reset store
       resetStore: () => {
+        console.log('🔄 Сброс хранилища');
+        const initialChats = createInitialChats();
         set({
-          chats: createInitialChats(),
-          activeChatId: '1',
+          chats: initialChats,
+          activeChatId: initialChats[0]?.id || null,
           isLoading: false,
           error: null,
           searchQuery: '',
         });
+        try {
+          localStorage.removeItem('chat-storage');
+          console.log('✅ Хранилище сброшено');
+        } catch (error) {
+          console.error('❌ Ошибка сброса:', error);
+        }
       },
     }),
     {
       name: 'chat-storage',
-      partialize: (state) => ({
-        chats: state.chats,
-        activeChatId: state.activeChatId,
-      }),
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => {
+        if (state.chats.length === 0) return {};
+        console.log('💾 Автосохранение в localStorage:', {
+          chatsCount: state.chats.length,
+          activeChatId: state.activeChatId,
+        });
+        return {
+          chats: state.chats,
+          activeChatId: state.activeChatId,
+        };
+      },
+      onRehydrateStorage: () => {
+        console.log('🔄 Восстановление из localStorage...');
+        return (state, error) => {
+          if (error) {
+            console.error('❌ Ошибка восстановления:', error);
+          } else if (state) {
+            console.log('✅ Данные восстановлены:', {
+              chatsCount: state.chats.length,
+              activeChatId: state.activeChatId,
+            });
+          } else {
+            console.log('📦 Нет сохраненных данных, используются моки');
+          }
+          return state;
+        };
+      },
     }
   )
 );

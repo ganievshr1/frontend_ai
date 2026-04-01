@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../ui/Button';
-import Slider from '../ui/Slider';
 
 interface Settings {
   model: string;
@@ -17,16 +16,68 @@ interface SettingsPanelProps {
   onSave?: (settings: Settings) => void;
 }
 
-const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, onSave }) => {
-  const [settings, setSettings] = useState<Settings>({
-    model: 'GigaChat',
-    temperature: 0.7,
-    topP: 0.9,
-    maxTokens: 2048,
-    systemPrompt: 'Вы полезный ассистент.',
-    theme: 'light',
-  });
+// Ключ для хранения всех настроек в localStorage
+const SETTINGS_STORAGE_KEY = 'app-settings';
 
+// Функция для загрузки настроек из localStorage
+const loadSettingsFromStorage = (): Settings | null => {
+  try {
+    const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Валидация структуры данных
+      if (parsed && typeof parsed === 'object' && 
+          parsed.model && typeof parsed.temperature === 'number') {
+        return parsed as Settings;
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error('❌ Ошибка загрузки настроек:', error);
+    return null;
+  }
+};
+
+// Функция для сохранения настроек в localStorage
+const saveSettingsToStorage = (settings: Settings): void => {
+  try {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    console.log('💾 Настройки сохранены:', settings);
+  } catch (error) {
+    console.error('❌ Ошибка сохранения настроек:', error);
+  }
+};
+
+// Настройки по умолчанию
+const defaultSettings: Settings = {
+  model: 'GigaChat',
+  temperature: 0.7,
+  topP: 0.9,
+  maxTokens: 2048,
+  systemPrompt: 'Вы полезный ассистент.',
+  theme: 'light',
+};
+
+const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, onSave }) => {
+  const [settings, setSettings] = useState<Settings>(defaultSettings);
+
+  // Загружаем настройки при монтировании
+  useEffect(() => {
+    const loaded = loadSettingsFromStorage();
+    if (loaded) {
+      console.log('✅ Настройки загружены из localStorage');
+      setSettings(loaded);
+    } else {
+      console.log('📦 Используются настройки по умолчанию');
+    }
+  }, []);
+
+  // Применяем тему при изменении
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', settings.theme);
+  }, [settings.theme]);
+
+  // Обработчик ESC
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -35,34 +86,32 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, onSave }
     return () => document.removeEventListener('keydown', handleEsc);
   }, [onClose]);
 
-  // Применяем тему при изменении
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', settings.theme);
-    localStorage.setItem('theme', settings.theme);
-  }, [settings.theme]);
-
-  // Загружаем сохраненную тему при монтировании
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
-    if (savedTheme) {
-      setSettings(prev => ({ ...prev, theme: savedTheme }));
-    }
-  }, []);
-
   const handleSave = () => {
+    // Сохраняем в localStorage
+    saveSettingsToStorage(settings);
+    // Вызываем callback
     onSave?.(settings);
+    // Закрываем панель
     onClose();
   };
 
   const handleReset = () => {
-    setSettings({
-      model: 'GigaChat',
-      temperature: 0.7,
-      topP: 0.9,
-      maxTokens: 2048,
-      systemPrompt: 'Вы полезный ассистент.',
-      theme: 'light',
-    });
+    setSettings(defaultSettings);
+    saveSettingsToStorage(defaultSettings);
+    console.log('🔄 Настройки сброшены к значениям по умолчанию');
+  };
+
+  const handleClearStorage = () => {
+    // Используем window.confirm вместо confirm (исправление ESLint)
+    if (window.confirm('Вы уверены, что хотите очистить все сохраненные настройки?')) {
+      try {
+        localStorage.removeItem(SETTINGS_STORAGE_KEY);
+        setSettings(defaultSettings);
+        console.log('🗑️ Настройки очищены');
+      } catch (error) {
+        console.error('❌ Ошибка очистки настроек:', error);
+      }
+    }
   };
 
   if (!isOpen) return null;
@@ -137,6 +186,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, onSave }
               onChange={(e) => setSettings({ ...settings, systemPrompt: e.target.value })}
               rows={4}
               className="settings-textarea"
+              placeholder="Введите системный промпт..."
             />
           </div>
 
@@ -158,12 +208,30 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, onSave }
             </div>
           </div>
 
+          <div className="settings-group">
+            <label>Управление данными</label>
+            <div className="storage-buttons">
+              <Button variant="primary" onClick={handleSave} size="small">
+                💾 Сохранить настройки
+              </Button>
+              <Button variant="secondary" onClick={handleReset} size="small">
+                🔄 Сбросить
+              </Button>
+              <Button variant="danger" onClick={handleClearStorage} size="small">
+                🗑️ Очистить всё
+              </Button>
+            </div>
+            <p className="storage-hint">
+              Настройки автоматически сохраняются при нажатии "Сохранить"
+            </p>
+          </div>
+
           <div className="settings-actions">
             <Button variant="primary" onClick={handleSave}>
-              Сохранить
+              Сохранить и закрыть
             </Button>
-            <Button variant="secondary" onClick={handleReset}>
-              Сбросить
+            <Button variant="secondary" onClick={onClose}>
+              Отмена
             </Button>
           </div>
         </div>

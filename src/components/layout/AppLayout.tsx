@@ -3,7 +3,11 @@ import Sidebar from '../sidebar/Sidebar';
 import ChatWindow from '../chat/ChatWindow';
 import ThemeToggle from '../ui/ThemeToggle';
 
-const AppLayout: React.FC = () => {
+interface AppLayoutProps {
+  onLogout?: () => void;  // 👈 Добавляем проп
+}
+
+const AppLayout: React.FC<AppLayoutProps> = ({ onLogout }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => {
@@ -29,6 +33,13 @@ const AppLayout: React.FC = () => {
       </div>
       
       <ThemeToggle />
+      
+      {/* Кнопка выхода */}
+      {onLogout && (
+        <button className="logout-btn" onClick={onLogout} title="Выйти">
+          🚪
+        </button>
+      )}
     </div>
   );
 };
