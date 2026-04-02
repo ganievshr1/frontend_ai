@@ -21,3 +21,23 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# .gitignore
+
+# Environment variables (секреты)
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# IDE и ОС
+.idea/
+.vscode/
+.DS_Store
+*.log
+
+# Сборка
+build/
+dist/
+*.tsbuildinfo

@@ -30,6 +30,14 @@
   --settings-overlay-bg: rgba(0, 0, 0, 0.5);
   --logout-btn-bg: #ffffff;
   --logout-btn-hover: #e8e8e8;
+  
+  /* GigaChat API specific */
+  --gigachat-badge-bg: #e8f5e9;
+  --gigachat-badge-text: #2e7d32;
+  --gigachat-streaming-cursor: #4caf50;
+  --gigachat-error-banner-bg: #ffebee;
+  --gigachat-error-banner-border: #ef9a9a;
+  --gigachat-loading-gradient: linear-gradient(90deg, #f5f5f5 25%, #e0e0e0 50%, #f5f5f5 75%);
 }
 
 [data-theme="dark"] {
@@ -62,6 +70,14 @@
   --settings-overlay-bg: rgba(0, 0, 0, 0.7);
   --logout-btn-bg: #2d2d2d;
   --logout-btn-hover: #3d3d3d;
+  
+  /* GigaChat API specific - dark */
+  --gigachat-badge-bg: #1b5e20;
+  --gigachat-badge-text: #81c784;
+  --gigachat-streaming-cursor: #66bb6a;
+  --gigachat-error-banner-bg: #3e2723;
+  --gigachat-error-banner-border: #ef5350;
+  --gigachat-loading-gradient: linear-gradient(90deg, #2d2d2d 25%, #404040 50%, #2d2d2d 75%);
 }
 
 /* ========== GLOBAL STYLES ========== */
@@ -455,6 +471,7 @@ body {
   width: 100%;
 }
 
+/* Chat Header with GigaChat styles */
 .chat-header {
   padding: 16px 24px;
   border-bottom: 1px solid var(--border-color);
@@ -463,40 +480,169 @@ body {
   align-items: center;
   background: var(--bg-primary);
   transition: all 0.3s ease;
+  position: relative;
 }
 
-.chat-header h2 {
+.chat-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+  opacity: 0.3;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-title {
   margin: 0;
   font-size: 20px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.settings-btn {
-  padding: 8px 16px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
-  color: var(--text-primary);
+/* GigaChat Model Badge */
+.chat-model-badge {
+  padding: 4px 10px;
+  background: var(--gigachat-badge-bg);
+  color: var(--gigachat-badge-text);
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid var(--accent-color);
+  white-space: nowrap;
   flex-shrink: 0;
 }
 
-.settings-btn:hover {
+.header-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.icon-btn {
+  padding: 8px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+
+.icon-btn:hover:not(:disabled) {
   background: var(--hover-bg);
+  border-color: var(--accent-color);
   transform: translateY(-1px);
+}
+
+.icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.clear-btn {
+  composes: icon-btn;
+}
+
+.settings-btn {
+  composes: icon-btn;
+  padding: 8px 16px;
+  width: auto;
+  font-size: 14px;
+  gap: 6px;
+}
+
+/* GigaChat Error Banner */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 24px;
+  background: var(--gigachat-error-banner-bg);
+  border-bottom: 1px solid var(--gigachat-error-banner-border);
+  color: var(--error-text);
+  font-size: 13px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.error-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.error-dismiss {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: inherit;
+  opacity: 0.7;
+  transition: all 0.2s;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.error-dismiss:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Messages Container */
+.messages-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+.messages-end-anchor {
+  height: 1px;
 }
 
 /* ========== MESSAGE STYLES ========== */
 .message-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -519,6 +665,7 @@ body {
   background: var(--user-message-bg);
   color: var(--user-message-text);
   margin-left: auto;
+  border-bottom-right-radius: 4px;
 }
 
 .message-assistant {
@@ -526,6 +673,7 @@ body {
   background: var(--assistant-message-bg);
   color: var(--assistant-message-text);
   margin-right: auto;
+  border-bottom-left-radius: 4px;
 }
 
 .message-header {
@@ -540,6 +688,33 @@ body {
   word-wrap: break-word;
   line-height: 1.5;
   overflow-wrap: break-word;
+  position: relative;
+}
+
+/* GigaChat Streaming Cursor */
+.streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  background: var(--gigachat-streaming-cursor);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Streaming message animation */
+.message-assistant.streaming {
+  animation: pulseSoft 2s ease-in-out infinite;
+}
+
+@keyframes pulseSoft {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.1); }
+  50% { box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.05); }
 }
 
 /* ========== MARKDOWN STYLES ========== */
@@ -675,8 +850,6 @@ body {
 }
 
 /* ========== CODE BLOCK STYLES ========== */
-
-/* Обертка для блока кода */
 .code-block-wrapper {
   position: relative;
   margin: 1em 0;
@@ -685,7 +858,6 @@ body {
   background: #1e1e1e;
 }
 
-/* Заголовок блока кода */
 .code-block-header {
   display: flex;
   justify-content: space-between;
@@ -719,7 +891,6 @@ body {
   color: #ffffff;
 }
 
-/* Блок кода */
 .code-block {
   margin: 0;
   padding: 16px;
@@ -870,6 +1041,148 @@ body {
   color: var(--text-secondary);
 }
 
+/* ========== GIGACHAT LOADING & STREAMING ========== */
+
+/* Typing indicator container with stop button */
+.typing-indicator-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  animation: slideUp 0.3s ease;
+}
+
+.typing-indicator-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Enhanced typing animation for GigaChat */
+.typing-indicator.gigachat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--assistant-message-bg);
+  border-radius: 20px;
+}
+
+.typing-indicator.gigachat .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  animation: gigachatBounce 1.4s infinite ease-in-out;
+}
+
+.typing-indicator.gigachat .dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-indicator.gigachat .dot:nth-child(2) { animation-delay: -0.16s; }
+.typing-indicator.gigachat .dot:nth-child(3) { animation-delay: 0s; }
+
+@keyframes gigachatBounce {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Stop generation button */
+.stop-generation-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--stop-btn-bg);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+}
+
+.stop-generation-btn:hover:not(:disabled) {
+  background: var(--stop-btn-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+}
+
+.stop-generation-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.stop-generation-btn .icon {
+  font-size: 14px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Loading skeleton for streaming */
+.loading-skeleton {
+  background: var(--gigachat-loading-gradient);
+  background-size: 200% 100%;
+  animation: loadingShimmer 1.5s infinite linear;
+  border-radius: 4px;
+  height: 1em;
+  margin: 4px 0;
+}
+
+.loading-skeleton.short { width: 60%; }
+.loading-skeleton.medium { width: 80%; }
+.loading-skeleton.long { width: 95%; }
+
+@keyframes loadingShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Connection status indicator */
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.connection-status.connected {
+  color: var(--accent-color);
+}
+
+.connection-status.connected::before {
+  content: '●';
+  color: var(--accent-color);
+  animation: blink 2s infinite;
+}
+
+.connection-status.error {
+  color: var(--error-text);
+}
+
+.connection-status.error::before {
+  content: '●';
+  color: var(--error-text);
+}
+
 /* ========== INPUT AREA ========== */
 .input-area {
   padding: 16px 24px;
@@ -877,6 +1190,17 @@ body {
   background: var(--bg-primary);
   transition: all 0.3s ease;
   width: 100%;
+  position: relative;
+}
+
+.input-area::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-color), transparent);
 }
 
 .input-container {
@@ -888,10 +1212,17 @@ body {
   padding: 12px;
   transition: all 0.2s ease;
   width: 100%;
+  border: 2px solid transparent;
 }
 
 .input-container:focus-within {
-  box-shadow: 0 0 0 2px var(--accent-color);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.input-container.disabled {
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .attach-btn, 
@@ -922,6 +1253,15 @@ body {
 .send-btn {
   font-size: 14px;
   padding: 8px 16px;
+  background: var(--accent-color);
+  color: white;
+  border-radius: 20px;
+}
+
+.send-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
 }
 
 .stop-btn {
@@ -929,18 +1269,14 @@ body {
   padding: 8px 16px;
   background: var(--stop-btn-bg);
   color: white;
+  border-radius: 20px;
   gap: 6px;
-}
-
-.attach-btn:hover:not(:disabled), 
-.send-btn:hover:not(:disabled) {
-  background: var(--hover-bg);
-  transform: scale(1.05);
 }
 
 .stop-btn:hover:not(:disabled) {
   background: var(--stop-btn-hover);
-  transform: scale(1.05);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
 }
 
 .stop-btn.active {
@@ -960,6 +1296,7 @@ body {
 .attach-btn:disabled:hover {
   background: none;
   transform: none;
+  box-shadow: none;
 }
 
 .textarea {
@@ -1705,6 +2042,15 @@ input:checked + .toggle-slider:before {
     max-width: 70%;
   }
   
+  .header-left {
+    gap: 8px;
+  }
+  
+  .chat-model-badge {
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+  
   .settings-btn {
     padding: 6px 12px;
     font-size: 12px;
@@ -1770,6 +2116,17 @@ input:checked + .toggle-slider:before {
   
   .typing-text {
     font-size: 11px;
+  }
+  
+  .typing-indicator-container {
+    padding: 10px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .stop-generation-btn {
+    padding: 6px 12px;
+    font-size: 12px;
   }
   
   .theme-toggle {
@@ -1912,6 +2269,20 @@ input:checked + .toggle-slider:before {
     font-size: 14px;
   }
   
+  .error-banner {
+    padding: 8px 16px;
+    font-size: 12px;
+    gap: 8px;
+  }
+  
+  .error-icon {
+    font-size: 16px;
+  }
+  
+  .error-text {
+    font-size: 12px;
+  }
+  
   .error-message {
     padding: 10px;
     margin: 12px 0;
@@ -2047,6 +2418,17 @@ input:checked + .toggle-slider:before {
   .chat-header h2 {
     font-size: 14px;
     max-width: 65%;
+  }
+  
+  .header-left {
+    flex-wrap: wrap;
+  }
+  
+  .chat-model-badge {
+    order: 3;
+    width: 100%;
+    margin-top: 4px;
+    justify-content: center;
   }
   
   .settings-btn {
@@ -2192,6 +2574,15 @@ input:checked + .toggle-slider:before {
   .storage-hint {
     font-size: 10px;
   }
+  
+  .typing-indicator-container {
+    padding: 8px 12px;
+  }
+  
+  .stop-generation-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
 }
 
 /* Touch Device Optimizations */
@@ -2208,7 +2599,8 @@ input:checked + .toggle-slider:before {
   .burger-menu,
   .theme-toggle,
   .logout-btn,
-  .storage-buttons .btn {
+  .storage-buttons .btn,
+  .stop-generation-btn {
     min-height: 44px;
     min-width: 44px;
   }
@@ -2356,6 +2748,10 @@ input:checked + .toggle-slider:before {
     font-size: 11px;
     padding: 5px 8px;
   }
+  
+  .typing-indicator-container {
+    padding: 8px 12px;
+  }
 }
 
 /* Reduced motion preferences */
@@ -2369,11 +2765,15 @@ input:checked + .toggle-slider:before {
     scroll-behavior: auto !important;
   }
   
-  .typing-dots span {
+  .typing-dots span,
+  .typing-indicator.gigachat .dot,
+  .streaming-cursor {
     animation: none;
+    opacity: 1;
   }
   
-  .stop-btn.active {
+  .stop-btn.active,
+  .stop-generation-btn .icon {
     animation: none;
   }
   
@@ -2381,4 +2781,155 @@ input:checked + .toggle-slider:before {
   .copy-btn.error {
     animation: none;
   }
+  
+  .message-assistant.streaming {
+    animation: none;
+    box-shadow: none;
+  }
+  
+  .loading-skeleton {
+    animation: none;
+    background: var(--bg-secondary);
+  }
+}
+
+/* ========== GIGACHAT API UTILITIES ========== */
+
+/* API status indicator in header */
+.api-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.api-status.online {
+  color: var(--accent-color);
+}
+
+.api-status.online::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--accent-color);
+  border-radius: 50%;
+  animation: pulseDot 2s infinite;
+}
+
+.api-status.offline {
+  color: var(--error-text);
+}
+
+.api-status.offline::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--error-text);
+  border-radius: 50%;
+}
+
+.api-status.error::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--error-text);
+  border-radius: 50%;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* Token usage indicator */
+.token-usage {
+  font-size: 10px;
+  color: var(--text-secondary);
+  padding: 2px 8px;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  margin-left: 8px;
+}
+
+.token-usage.warning {
+  color: #ff9800;
+}
+
+.token-usage.critical {
+  color: var(--error-text);
+}
+
+/* Streaming progress bar */
+.streaming-progress {
+  height: 2px;
+  background: var(--border-color);
+  border-radius: 1px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.streaming-progress-bar {
+  height: 100%;
+  background: var(--accent-color);
+  border-radius: 1px;
+  animation: streamProgress 0.5s ease-in-out infinite alternate;
+  transform-origin: left;
+}
+
+@keyframes streamProgress {
+  from { transform: scaleX(0.8); }
+  to { transform: scaleX(1); }
+}
+
+/* Message metadata */
+.message-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.message-meta .model-tag {
+  padding: 2px 6px;
+  background: var(--gigachat-badge-bg);
+  color: var(--gigachat-badge-text);
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.message-meta .timestamp {
+  font-family: monospace;
+}
+
+/* Retry button for failed messages */
+.retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+.retry-btn:hover {
+  background: var(--hover-bg);
+  border-color: var(--accent-color);
+}
+
+.retry-btn .icon {
+  font-size: 12px;
 }
