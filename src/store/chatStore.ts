@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { Chat, Message } from '../types';
 import { mockChats as initialMockChats } from '../mocks/mockChats';
 import { mockMessages as initialMockMessages } from '../mocks/mockMessages';
+import { gigachatApi } from '../services/gigachatApi';
 
 interface ChatStore {
   // State
@@ -11,6 +12,15 @@ interface ChatStore {
   isLoading: boolean;
   error: string | null;
   searchQuery: string;
+  credentials: string | null;
+  settings: {
+    model: string;
+    temperature: number;
+    topP: number;
+    maxTokens: number;
+    systemPrompt: string;
+  };
+  isStreaming: boolean;
 
   // Actions
   setActiveChat: (chatId: string) => void;
@@ -27,6 +37,9 @@ interface ChatStore {
   exportToLocalStorage: () => void;
   importFromLocalStorage: () => void;
   clearLocalStorage: () => void;
+  setCredentials: (credentials: string) => void;
+  updateSettings: (settings: Partial<ChatStore['settings']>) => void;
+  stopGeneration: () => void;
 }
 
 // Создаем начальные чаты с сообщениями
@@ -43,15 +56,12 @@ const createInitialChats = (): Chat[] => {
 const generateChatTitleFromMessage = (messageText: string, index: number): string => {
   const trimmedText = messageText.trim();
   
-  // Если сообщение пустое или слишком короткое (меньше 3 символов)
   if (!trimmedText || trimmedText.length < 3) {
     return `Диалог ${index + 1}`;
   }
   
-  // Удаляем лишние пробелы и переносы строк
   const cleanText = trimmedText.replace(/\s+/g, ' ').replace(/\n/g, ' ');
   
-  // Обрезаем до 35 символов (не 40, чтобы добавить многоточие)
   let title = cleanText;
   if (cleanText.length > 35) {
     title = cleanText.substring(0, 35) + '...';
@@ -65,6 +75,7 @@ interface StoredData {
   state: {
     chats: Chat[];
     activeChatId: string | null;
+    settings: ChatStore['settings'];
   };
 }
 
@@ -85,7 +96,7 @@ const safeJSONParse = (data: string | null): StoredData | null => {
 };
 
 // Функция для загрузки данных из localStorage
-const loadFromLocalStorage = (): { chats: Chat[]; activeChatId: string | null } | null => {
+const loadFromLocalStorage = (): { chats: Chat[]; activeChatId: string | null; settings: ChatStore['settings'] } | null => {
   try {
     const stored = localStorage.getItem('chat-storage');
     if (!stored) return null;
@@ -97,6 +108,13 @@ const loadFromLocalStorage = (): { chats: Chat[]; activeChatId: string | null } 
       return {
         chats: parsed.state.chats,
         activeChatId: parsed.state.activeChatId,
+        settings: parsed.state.settings || {
+          model: 'GigaChat',
+          temperature: 0.7,
+          topP: 0.9,
+          maxTokens: 2048,
+          systemPrompt: 'Вы полезный ассистент.',
+        },
       };
     }
     return null;
@@ -113,12 +131,20 @@ const getInitialState = () => {
     return {
       chats: loaded.chats,
       activeChatId: loaded.activeChatId,
+      settings: loaded.settings,
     };
   }
   const initialChats = createInitialChats();
   return {
     chats: initialChats,
     activeChatId: initialChats[0]?.id || null,
+    settings: {
+      model: 'GigaChat',
+      temperature: 0.7,
+      topP: 0.9,
+      maxTokens: 2048,
+      systemPrompt: 'Вы полезный ассистент.',
+    },
   };
 };
 
@@ -131,6 +157,9 @@ export const useChatStore = create<ChatStore>()(
       isLoading: false,
       error: null,
       searchQuery: '',
+      credentials: null,
+      settings: getInitialState().settings,
+      isStreaming: false,
 
       // Set active chat
       setActiveChat: (chatId: string) => {
@@ -182,8 +211,10 @@ export const useChatStore = create<ChatStore>()(
         });
       },
 
-      // Add message to chat (с обновлением названия для первого сообщения)
+      // Add message to chat with GigaChat API integration
       addMessage: async (chatId: string, message: Omit<Message, 'id' | 'timestamp'>) => {
+        const { credentials, settings, isStreaming } = get();
+        
         console.log('💬 Добавление сообщения в чат:', chatId);
         
         const chat = get().chats.find(c => c.id === chatId);
@@ -199,13 +230,13 @@ export const useChatStore = create<ChatStore>()(
         let updatedTitle = chat?.title;
         
         if (isFirstMessage && message.sender === 'user') {
-          // Генерируем новое название на основе первого сообщения
           const chatIndex = get().chats.findIndex(c => c.id === chatId);
           const newTitle = generateChatTitleFromMessage(message.text, chatIndex);
           console.log('🏷️ Генерация названия чата:', newTitle);
           updatedTitle = newTitle;
         }
 
+        // Добавляем сообщение пользователя
         set((state) => ({
           chats: state.chats.map(chat =>
             chat.id === chatId
@@ -219,42 +250,138 @@ export const useChatStore = create<ChatStore>()(
           ),
         }));
 
-        // Simulate AI response if message is from user
-        if (message.sender === 'user') {
-          set({ isLoading: true });
+        // Если сообщение от пользователя и есть credentials, отправляем запрос к API
+        if (message.sender === 'user' && credentials) {
+          set({ isLoading: true, error: null, isStreaming: true });
           
+          // Подготавливаем контекст диалога
+          const currentChat = get().chats.find(c => c.id === chatId);
+          const messagesForAPI = [
+            { role: 'system' as const, content: settings.systemPrompt },
+            ...(currentChat?.messages || []).map(msg => ({
+              role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+              content: msg.text,
+            })),
+          ];
+
+          // Создаем временное сообщение ассистента для streaming
+          const assistantMessageId = (Date.now() + 1).toString();
+          let assistantContent = '';
+          
+          set((state) => ({
+            chats: state.chats.map(chat =>
+              chat.id === chatId
+                ? {
+                    ...chat,
+                    messages: [...chat.messages, {
+                      id: assistantMessageId,
+                      text: '',
+                      sender: 'assistant',
+                      timestamp: new Date().toISOString(),
+                    }],
+                  }
+                : chat
+            ),
+          }));
+
           try {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            const assistantMessage: Omit<Message, 'id' | 'timestamp'> = {
-              text: 'Это тестовый ответ от ИИ-ассистента. Здесь будет отображаться сгенерированный контент с поддержкой **markdown** и другими возможностями.',
-              sender: 'assistant',
-            };
-            
-            const aiMessage: Message = {
-              ...assistantMessage,
-              id: (Date.now() + 1).toString(),
-              timestamp: new Date().toISOString(),
-            };
-            
-            set((state) => ({
-              chats: state.chats.map(chat =>
-                chat.id === chatId
-                  ? {
-                      ...chat,
-                      messages: [...chat.messages, aiMessage],
-                      lastMessageDate: aiMessage.timestamp,
-                    }
-                  : chat
-              ),
-              isLoading: false,
-            }));
+            // Используем streaming режим
+            await gigachatApi.sendMessageStream(
+              credentials,
+              messagesForAPI,
+              {
+                model: settings.model,
+                temperature: settings.temperature,
+                topP: settings.topP,
+                maxTokens: settings.maxTokens,
+              },
+              // onChunk - обновляем сообщение по мере поступления данных
+              (chunk: string) => {
+                assistantContent += chunk;
+                set((state) => ({
+                  chats: state.chats.map(chat =>
+                    chat.id === chatId
+                      ? {
+                          ...chat,
+                          messages: chat.messages.map(msg =>
+                            msg.id === assistantMessageId
+                              ? { ...msg, text: assistantContent }
+                              : msg
+                          ),
+                          lastMessageDate: new Date().toISOString(),
+                        }
+                      : chat
+                  ),
+                }));
+              },
+              // onComplete - завершение streaming
+              () => {
+                console.log('✅ Streaming завершен');
+                set({ isLoading: false, isStreaming: false });
+              },
+              // onError - обработка ошибки
+              (error: Error) => {
+                console.error('❌ Ошибка streaming:', error);
+                set({ 
+                  error: error.message,
+                  isLoading: false,
+                  isStreaming: false 
+                });
+                
+                // Обновляем сообщение с ошибкой
+                set((state) => ({
+                  chats: state.chats.map(chat =>
+                    chat.id === chatId
+                      ? {
+                          ...chat,
+                          messages: chat.messages.map(msg =>
+                            msg.id === assistantMessageId
+                              ? { ...msg, text: `❌ Ошибка: ${error.message}` }
+                              : msg
+                          ),
+                        }
+                      : chat
+                  ),
+                }));
+              }
+            );
           } catch (error) {
+            console.error('❌ Ошибка отправки сообщения:', error);
             set({ 
               error: error instanceof Error ? error.message : 'Ошибка отправки сообщения',
-              isLoading: false 
+              isLoading: false,
+              isStreaming: false 
             });
           }
+        } else if (message.sender === 'user' && !credentials) {
+          // Если нет credentials, используем заглушку
+          set({ isLoading: true });
+          
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          const assistantMessage: Omit<Message, 'id' | 'timestamp'> = {
+            text: '⚠️ Не выполнена авторизация. Пожалуйста, введите ключ авторизации в форме входа.',
+            sender: 'assistant',
+          };
+          
+          const aiMessage: Message = {
+            ...assistantMessage,
+            id: (Date.now() + 1).toString(),
+            timestamp: new Date().toISOString(),
+          };
+          
+          set((state) => ({
+            chats: state.chats.map(chat =>
+              chat.id === chatId
+                ? {
+                    ...chat,
+                    messages: [...chat.messages, aiMessage],
+                    lastMessageDate: aiMessage.timestamp,
+                  }
+                : chat
+            ),
+            isLoading: false,
+          }));
         }
       },
 
@@ -292,6 +419,26 @@ export const useChatStore = create<ChatStore>()(
         });
       },
 
+      // Set credentials
+      setCredentials: (credentials: string) => {
+        console.log('🔑 Установка credentials');
+        set({ credentials });
+      },
+
+      // Update settings
+      updateSettings: (newSettings: Partial<ChatStore['settings']>) => {
+        console.log('⚙️ Обновление настроек:', newSettings);
+        set((state) => ({
+          settings: { ...state.settings, ...newSettings },
+        }));
+      },
+
+      // Stop generation
+      stopGeneration: () => {
+        console.log('⏹️ Остановка генерации');
+        set({ isLoading: false, isStreaming: false });
+      },
+
       // Export to localStorage (manual)
       exportToLocalStorage: () => {
         try {
@@ -299,6 +446,7 @@ export const useChatStore = create<ChatStore>()(
           const state = {
             chats: get().chats,
             activeChatId: get().activeChatId,
+            settings: get().settings,
           };
           localStorage.setItem('chat-storage', JSON.stringify({ state }));
           console.log('✅ Данные успешно сохранены');
@@ -325,6 +473,7 @@ export const useChatStore = create<ChatStore>()(
             set({
               chats: parsed.state.chats,
               activeChatId: parsed.state.activeChatId,
+              settings: parsed.state.settings || get().settings,
               error: null,
             });
             console.log('✅ Данные успешно загружены');
@@ -365,6 +514,8 @@ export const useChatStore = create<ChatStore>()(
           isLoading: false,
           error: null,
           searchQuery: '',
+          credentials: null,
+          isStreaming: false,
         });
         try {
           localStorage.removeItem('chat-storage');
@@ -386,6 +537,7 @@ export const useChatStore = create<ChatStore>()(
         return {
           chats: state.chats,
           activeChatId: state.activeChatId,
+          settings: state.settings,
         };
       },
       onRehydrateStorage: () => {
