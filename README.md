@@ -38,6 +38,7 @@
 
 Выполните команды в выбранной вами рабочей папке:
 
+```bash
 # Скачать фронтенд
 git clone https://github.com/ganievshr1/frontend_ai.git
 
@@ -47,17 +48,17 @@ git clone https://github.com/ganievshr1/backend_for-_rontend.git
 
 Примечание: Если вы используете другие названия репозиториев, замените ссылки на соответствующие.
 
-Шаг 2: Установка зависимостей
-Бэкенд (прокси-сервер)
+### Шаг 2: Установка зависимостей
+## Бэкенд (прокси-сервер)
 bash
 cd backend_for-_rontend
 npm install
-Фронтенд (React-приложение)
+## Фронтенд (React-приложение)
 bash
 cd ../frontend_ai
 npm install
-Шаг 3: Настройка авторизации в GigaChat API
-3.1 Регистрация в GigaChat Studio
+### Шаг 3: Настройка авторизации в GigaChat API
+## 3.1 Регистрация в GigaChat Studio
 Перейдите на сайт GigaChat Studio
 
 Нажмите "Войти" или "Зарегистрироваться"
@@ -70,7 +71,7 @@ Email (создайте новый аккаунт)
 
 Номер телефона
 
-3.2 Создание проекта
+## 3.2 Создание проекта
 После входа нажмите "Создать проект"
 
 Выберите тип проекта: "GigaChat API"
@@ -79,7 +80,7 @@ Email (создайте новый аккаунт)
 
 Нажмите "Создать"
 
-3.3 Получение ключа авторизации
+## 3.3 Получение ключа авторизации
 В созданном проекте перейдите в раздел "Настройки API"
 
 Нажмите кнопку "Получить ключ"
@@ -90,7 +91,7 @@ text
 Пример ключа: ZjM5ZjY3ZjAtNzVh... (очень длинная строка)
 ⚠️ ВАЖНО! Ключ отображается только один раз. Сохраните его в надежном месте.
 
-3.4 Настройка приложения
+## 3.4 Настройка приложения
 Есть два способа передать ключ в приложение:
 
 Способ A: Через интерфейс приложения (проще для демонстрации)
@@ -118,7 +119,7 @@ javascript
 require('dotenv').config();
 // ... в коде используйте:
 const credentials = req.body.credentials || process.env.GIGACHAT_CREDENTIALS;
-Шаг 4: Запуск приложения
+### Шаг 4: Запуск приложения
 Запуск бэкенда (в одном терминале)
 bash
 cd backend_for-_rontend
@@ -154,7 +155,7 @@ GigaChat API требует OAuth 2.0 авторизацию
 Безопасность — ключ хранится на сервере, а не в браузере
 
 Эндпоинты API
-1. Получение токена доступа
+# 1. Получение токена доступа
 http
 POST https://ngw.devices.sberbank.ru:9443/api/v2/oauth
 Headers:
@@ -163,7 +164,7 @@ Headers:
   RqUID: <UUID>
   Authorization: Basic <ваш_ключ>
 Body: scope=GIGACHAT_API_PERS
-2. Отправка сообщения
+# 2. Отправка сообщения
 http
 POST https://gigachat.devices.sberbank.ru/api/v1/chat/completions
 Headers:
@@ -181,7 +182,7 @@ Body:
   "max_tokens": 2048,
   "stream": false
 }
-3. Потоковый режим (streaming)
+# 3. Потоковый режим (streaming)
 http
 POST https://gigachat.devices.sberbank.ru/api/v1/chat/completions
 Headers:
@@ -191,7 +192,7 @@ Body:
   ...,
   "stream": true
 }
-4. Отправка изображения (multimodal)
+#4. Отправка изображения (multimodal)
 http
 POST https://gigachat.devices.sberbank.ru/api/v1/chat/completions
 Body:
@@ -459,13 +460,15 @@ Max Tokens: 2048
 📝 Полезные ссылки
 Официальная документация GigaChat API
 
-GigaChat Studio
+### GigaChat Studio
 
-Node.js официальный сайт
+### Node.js официальный сайт
 
-React документация
+### React документация
 
-📄 Лицензия
+### 📄 Лицензия
 Этот проект предназначен для образовательных и демонстрационных целей. При использовании GigaChat API ознакомьтесь с условиями использования Сбера.
 
 💡 Совет: Для лучшего опыта использования рекомендуется использовать потоковый режим (streaming) и темную тему интерфейса.
+
+
