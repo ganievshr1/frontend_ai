@@ -38,7 +38,6 @@
 
 Выполните команды в выбранной вами рабочей папке:
 
-```bash
 # Скачать фронтенд
 git clone https://github.com/ganievshr1/frontend_ai.git
 
