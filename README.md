@@ -125,7 +125,6 @@ npm start
 - Проверьте, что бэкенд запущен и работает на порту `3001`
 - Убедитесь, что в файле `frontend_ai/src/services/gigachatApi.ts` указан правильный URL:
 
-```typescript
 private backendUrl = 'http://localhost:3001';
 
 ### Ошибка авторизации в GigaChat
@@ -142,14 +141,13 @@ private backendUrl = 'http://localhost:3001';
 - **Для фронтенда:** При запуске `npm start` нажмите `Y` для использования другого порта
 - **Для бэкенда:** Измените порт в файле `backend_for_-_rontend/server.js`:
 
-```javascript
 const PORT = 3002;  // измените на свободный порт
 
 ### Изменение порта в файле фронтенда
 
 Откройте файл `frontend_ai/src/services/gigachatApi.ts` и измените URL бэкенда:
 
-```typescript
+
 private backendUrl = 'http://localhost:3002';
 
 ### Ошибка SSL сертификата
