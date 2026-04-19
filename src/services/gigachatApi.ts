@@ -46,7 +46,7 @@ class GigaChatAPI {
     }
   }
 
-  // Streaming запрос (SSE)
+  // Streaming запрос (SSE) с поддержкой отмены
   async sendMessageStream(
     credentials: string,
     messages: GigaChatMessage[],
@@ -58,7 +58,8 @@ class GigaChatAPI {
     },
     onChunk: (chunk: string) => void,
     onComplete: () => void,
-    onError: (error: Error) => void
+    onError: (error: Error) => void,
+    signal?: AbortSignal
   ): Promise<void> {
     try {
       const response = await fetch(`${this.backendUrl}/api/chat/stream`, {
@@ -74,6 +75,7 @@ class GigaChatAPI {
           topP: settings.topP,
           maxTokens: settings.maxTokens,
         }),
+        signal, // Передаем сигнал для отмены запроса
       });
 
       if (!response.ok) {
@@ -90,9 +92,16 @@ class GigaChatAPI {
       let buffer = '';
 
       while (true) {
+        // Проверяем, не был ли запрос отменен
+        if (signal?.aborted) {
+          console.log('⏹️ Запрос отменен, закрываем reader');
+          reader.cancel();
+          throw new DOMException('The user aborted a request.', 'AbortError');
+        }
+
         const { done, value } = await reader.read();
         if (done) break;
-
+        
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
