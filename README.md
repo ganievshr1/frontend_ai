@@ -154,7 +154,6 @@ private backendUrl = 'http://localhost:3002';
 
 **Решение:** В бэкенде проблема уже решена. В файле `server.js` отключена проверка SSL для API Сбера:
 
-```javascript
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 ## ✅ Проверка работоспособности
