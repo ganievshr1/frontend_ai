@@ -68,13 +68,11 @@ git clone https://github.com/ganievshr1/backend_for_-_rontend.git
 
 ### Бэкенд
 
-```bash
 cd backend_for_-_rontend
 npm install
 
 ### Фронтенд
 
-```bash
 cd ../frontend_ai
 npm install
 
@@ -90,7 +88,6 @@ npm install
 
 ### Запуск бэкенда (в первом терминале)
 
-```bash
 cd backend_for_-_rontend
 npm run dev
 
@@ -98,7 +95,6 @@ npm run dev
 
 ### Запуск фронтенда (во втором терминале)
 
-```bash
 cd frontend_ai
 npm start
 
