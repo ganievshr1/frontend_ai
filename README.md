@@ -165,20 +165,22 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 ## 📁 Структура проекта
 
+```text
 frontend_ai/ # Фронтенд (React + TypeScript)
 ├── src/
-│ ├── components/ # React компоненты
-│ ├── hooks/ # Пользовательские хуки
-│ ├── services/ # API-клиенты
-│ ├── store/ # Zustand store
-│ ├── styles/ # CSS стили
-│ └── types/ # TypeScript типы
+│   ├── components/ # React компоненты
+│   ├── hooks/ # Пользовательские хуки
+│   ├── services/ # API-клиенты
+│   ├── store/ # Zustand store
+│   ├── styles/ # CSS стили
+│   └── types/ # TypeScript типы
 ├── public/ # Статические файлы
 └── package.json
 
 backend_for_-_rontend/ # Бэкенд (Node.js + Express)
 ├── server.js # Основной сервер
 └── package.json
+```
 
 ## 📄 Лицензия
 
