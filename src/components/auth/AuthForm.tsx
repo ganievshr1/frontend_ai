@@ -20,28 +20,18 @@ const AuthForm: React.FC<AuthFormProps> = ({ onLogin }) => {
   
   const setCredentialsInStore = useChatStore((state) => state.setCredentials);
 
-  const validateBase64 = (str: string): boolean => {
-    const base64Regex = /^[A-Za-z0-9+/=]+$/;
-    return base64Regex.test(str);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
     if (!credentials.trim()) {
-      setError('Поле Credentials не может быть пустым');
-      return;
-    }
-    
-    if (!validateBase64(credentials)) {
-      setError('Некорректный формат Base64 строки');
+      setError('Поле Authorization Key не может быть пустым');
       return;
     }
     
     setIsLoading(true);
     
-    // Сохраняем credentials в store
+    // Сохраняем credentials в store для использования в API запросах
     setCredentialsInStore(credentials);
     
     setTimeout(() => {
@@ -57,14 +47,17 @@ const AuthForm: React.FC<AuthFormProps> = ({ onLogin }) => {
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Credentials (Base64)</label>
+            <label>Authorization Key</label>
             <input
               type="password"
               value={credentials}
               onChange={(e) => setCredentials(e.target.value)}
-              placeholder="Введите Base64 строку..."
+              placeholder="Введите ключ авторизации из Studio..."
               className="auth-input"
             />
+            <small style={{ display: 'block', marginTop: '4px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+              Получите ключ в личном кабинете Studio → Настройки API → Получить ключ
+            </small>
           </div>
           
           <div className="form-group">

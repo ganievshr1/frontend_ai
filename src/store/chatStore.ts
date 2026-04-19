@@ -21,6 +21,7 @@ interface ChatStore {
     systemPrompt: string;
   };
   isStreaming: boolean;
+  abortController: AbortController | null;
 
   // Actions
   setActiveChat: (chatId: string) => void;
@@ -40,6 +41,7 @@ interface ChatStore {
   setCredentials: (credentials: string) => void;
   updateSettings: (settings: Partial<ChatStore['settings']>) => void;
   stopGeneration: () => void;
+  setAbortController: (controller: AbortController | null) => void;
 }
 
 // Функция для генерации названия чата из сообщения
@@ -68,6 +70,24 @@ const createInitialChats = (): Chat[] => {
     isLoading: false,
     error: null,
   }));
+};
+
+// Функция для генерации названия чата из сообщения
+const generateChatTitleFromMessage = (messageText: string, index: number): string => {
+  const trimmedText = messageText.trim();
+  
+  if (!trimmedText || trimmedText.length < 3) {
+    return `Диалог ${index + 1}`;
+  }
+  
+  const cleanText = trimmedText.replace(/\s+/g, ' ').replace(/\n/g, ' ');
+  
+  let title = cleanText;
+  if (cleanText.length > 35) {
+    title = cleanText.substring(0, 35) + '...';
+  }
+  
+  return title;
 };
 
 // Интерфейс для сохраненных данных
@@ -108,7 +128,13 @@ const loadFromLocalStorage = (): { chats: Chat[]; activeChatId: string | null; s
       return {
         chats: parsed.state.chats,
         activeChatId: parsed.state.activeChatId,
-        settings: parsed.state.settings,
+        settings: parsed.state.settings || {
+          model: 'GigaChat',
+          temperature: 0.7,
+          topP: 0.9,
+          maxTokens: 2048,
+          systemPrompt: 'Вы полезный ассистент.',
+        },
       };
     }
     return null;
@@ -125,13 +151,7 @@ const getInitialState = () => {
     return {
       chats: loaded.chats,
       activeChatId: loaded.activeChatId,
-      settings: loaded.settings || {
-        model: 'GigaChat',
-        temperature: 0.7,
-        topP: 0.9,
-        maxTokens: 2048,
-        systemPrompt: 'Вы полезный ассистент.',
-      },
+      settings: loaded.settings,
     };
   }
   const initialChats = createInitialChats();
@@ -160,8 +180,9 @@ export const useChatStore = create<ChatStore>()(
       error: null,
       searchQuery: '',
       credentials: null,
-      settings: initialState.settings,
+      settings: getInitialState().settings,
       isStreaming: false,
+      abortController: null,
 
       // Set active chat
       setActiveChat: (chatId: string) => {
@@ -213,15 +234,34 @@ export const useChatStore = create<ChatStore>()(
         });
       },
 
-      // Add message to chat (с API интеграцией)
+      // Set AbortController
+      setAbortController: (controller: AbortController | null) => {
+        set({ abortController: controller });
+      },
+
+      // Stop generation
+      stopGeneration: () => {
+        console.log('⏹️ Остановка генерации...');
+        const { abortController } = get();
+        
+        if (abortController) {
+          console.log('⏹️ Отправка сигнала отмены...');
+          abortController.abort();
+          set({ 
+            abortController: null,
+            isLoading: false, 
+            isStreaming: false 
+          });
+        } else {
+          console.log('⚠️ Нет активного AbortController для отмены');
+          set({ isLoading: false, isStreaming: false });
+        }
+      },
+
+      // Add message to chat with GigaChat API integration
       addMessage: async (chatId: string, message: Omit<Message, 'id' | 'timestamp'>) => {
         const { credentials, settings, isStreaming } = get();
         
-        if (!credentials) {
-          set({ error: 'Не выполнена авторизация' });
-          return;
-        }
-
         console.log('💬 Добавление сообщения в чат:', chatId);
         
         const chat = get().chats.find(c => c.id === chatId);
@@ -257,9 +297,11 @@ export const useChatStore = create<ChatStore>()(
           ),
         }));
 
-        // Если сообщение от пользователя, отправляем запрос к API
-        if (message.sender === 'user') {
-          set({ isLoading: true, error: null, isStreaming: true });
+        // Если сообщение от пользователя и есть credentials, отправляем запрос к API
+        if (message.sender === 'user' && credentials) {
+          // Создаем AbortController для возможности отмены запроса
+          const abortController = new AbortController();
+          set({ isLoading: true, error: null, isStreaming: true, abortController });
           
           // Подготавливаем контекст диалога
           const currentChat = get().chats.find(c => c.id === chatId);
@@ -269,12 +311,12 @@ export const useChatStore = create<ChatStore>()(
               role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
               content: msg.text,
             })),
-            { role: 'user' as const, content: message.text },
           ];
 
           // Создаем временное сообщение ассистента для streaming
           const assistantMessageId = (Date.now() + 1).toString();
           let assistantContent = '';
+          let isAborted = false;
           
           set((state) => ({
             chats: state.chats.map(chat =>
@@ -293,7 +335,7 @@ export const useChatStore = create<ChatStore>()(
           }));
 
           try {
-            // Используем streaming режим
+            // Используем streaming режим с поддержкой отмены
             await gigachatApi.sendMessageStream(
               credentials,
               messagesForAPI,
@@ -305,6 +347,7 @@ export const useChatStore = create<ChatStore>()(
               },
               // onChunk - обновляем сообщение по мере поступления данных
               (chunk: string) => {
+                if (isAborted) return;
                 assistantContent += chunk;
                 set((state) => ({
                   chats: state.chats.map(chat =>
@@ -324,43 +367,100 @@ export const useChatStore = create<ChatStore>()(
               },
               // onComplete - завершение streaming
               () => {
+                if (isAborted) return;
                 console.log('✅ Streaming завершен');
-                set({ isLoading: false, isStreaming: false });
+                set({ isLoading: false, isStreaming: false, abortController: null });
               },
               // onError - обработка ошибки
               (error: Error) => {
+                if (isAborted) return;
                 console.error('❌ Ошибка streaming:', error);
-                set({ 
-                  error: error.message,
-                  isLoading: false,
-                  isStreaming: false 
-                });
                 
-                // Обновляем сообщение с ошибкой
-                set((state) => ({
-                  chats: state.chats.map(chat =>
-                    chat.id === chatId
-                      ? {
-                          ...chat,
-                          messages: chat.messages.map(msg =>
-                            msg.id === assistantMessageId
-                              ? { ...msg, text: `❌ Ошибка: ${error.message}` }
-                              : msg
-                          ),
-                        }
-                      : chat
-                  ),
-                }));
-              }
+                // Проверяем, не была ли операция отменена
+                if (error.name === 'AbortError') {
+                  console.log('⏹️ Запрос был отменен пользователем');
+                  set((state) => ({
+                    chats: state.chats.map(chat =>
+                      chat.id === chatId
+                        ? {
+                            ...chat,
+                            messages: chat.messages.map(msg =>
+                              msg.id === assistantMessageId
+                                ? { ...msg, text: assistantContent || '⏹️ Генерация остановлена пользователем.' }
+                                : msg
+                            ),
+                          }
+                        : chat
+                    ),
+                    isLoading: false,
+                    isStreaming: false,
+                    abortController: null,
+                  }));
+                } else {
+                  set({ 
+                    error: error.message,
+                    isLoading: false,
+                    isStreaming: false,
+                    abortController: null,
+                  });
+                  
+                  // Обновляем сообщение с ошибкой
+                  set((state) => ({
+                    chats: state.chats.map(chat =>
+                      chat.id === chatId
+                        ? {
+                            ...chat,
+                            messages: chat.messages.map(msg =>
+                              msg.id === assistantMessageId
+                                ? { ...msg, text: `❌ Ошибка: ${error.message}` }
+                                : msg
+                            ),
+                          }
+                        : chat
+                    ),
+                  }));
+                }
+              },
+              abortController.signal
             );
           } catch (error) {
             console.error('❌ Ошибка отправки сообщения:', error);
             set({ 
               error: error instanceof Error ? error.message : 'Ошибка отправки сообщения',
               isLoading: false,
-              isStreaming: false 
+              isStreaming: false,
+              abortController: null,
             });
           }
+        } else if (message.sender === 'user' && !credentials) {
+          // Если нет credentials, используем заглушку
+          set({ isLoading: true });
+          
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          const assistantMessage: Omit<Message, 'id' | 'timestamp'> = {
+            text: '⚠️ Не выполнена авторизация. Пожалуйста, введите ключ авторизации в форме входа.',
+            sender: 'assistant',
+          };
+          
+          const aiMessage: Message = {
+            ...assistantMessage,
+            id: (Date.now() + 1).toString(),
+            timestamp: new Date().toISOString(),
+          };
+          
+          set((state) => ({
+            chats: state.chats.map(chat =>
+              chat.id === chatId
+                ? {
+                    ...chat,
+                    messages: [...chat.messages, aiMessage],
+                    lastMessageDate: aiMessage.timestamp,
+                  }
+                : chat
+            ),
+            isLoading: false,
+          }));
         }
       },
 
@@ -410,12 +510,6 @@ export const useChatStore = create<ChatStore>()(
         set((state) => ({
           settings: { ...state.settings, ...newSettings },
         }));
-      },
-
-      // Stop generation
-      stopGeneration: () => {
-        console.log('⏹️ Остановка генерации');
-        set({ isLoading: false, isStreaming: false });
       },
 
       // Export to localStorage (manual)
@@ -495,6 +589,7 @@ export const useChatStore = create<ChatStore>()(
           searchQuery: '',
           credentials: null,
           isStreaming: false,
+          abortController: null,
         });
         try {
           localStorage.removeItem('chat-storage');
