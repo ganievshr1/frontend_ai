@@ -1,46 +1,262 @@
-# Getting Started with Create React App
+Инструкция по запуску проекта GigaChat
+Данный проект состоит из двух частей:
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Бэкенд (gigachat_backend) — прокси-сервер для безопасного общения с API GigaChat.
 
-## Available Scripts
+Фронтенд (gigachat_final) — пользовательский интерфейс (React + TypeScript).
 
-In the project directory, you can run:
+Для корректной работы приложения необходимо запустить обе части.
 
-### `npm start`
+📋 Предварительные требования
+Убедитесь, что на вашем компьютере установлены следующие программы:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Node.js (версия 16.x или выше). После установки в терминале должны быть доступны команды node -v и npm -v.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+Ключ авторизации (Authorization Key) от GigaChat. Его можно получить в личном кабинете GigaChat (раздел "Настройки API" -> "Получить ключ").
 
-### `npm test`
+🚀 Запуск бэкенда (прокси-сервер)
+Бэкенд работает как посредник между вашим браузером и API GigaChat. Это необходимо для защиты вашего ключа авторизации.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Откройте терминал.
 
-### `npm run build`
+Перейдите в папку с бэкендом:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+bash
+cd C:\Разработка IT продукта\2 семестр\Frontend\gigachat_backend
+Установите зависимости (выполняется один раз):
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+bash
+npm install
+Эта команда установит все необходимые библиотеки, указанные в package.json.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Запустите сервер:
 
-### `npm run eject`
+bash
+npm run dev
+Бэкенд запустится в режиме разработки с автоматическим перезапуском при изменениях.
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Результат: Вы должны увидеть сообщение:
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+text
+🚀 Proxy server running on http://localhost:3001
+📡 Ожидание запросов от фронтенда...
+Бэкенд успешно запущен и слушает порт 3001. Оставьте этот терминал открытым.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+💻 Запуск фронтенда (пользовательский интерфейс)
+Фронтенд — это само веб-приложение, с которым вы будете взаимодействовать.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+Откройте новый терминал.
 
-## Learn More
+Перейдите в папку с фронтендом:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+bash
+cd C:\Разработка IT продукта\2 семестр\Frontend\gigachat_new_1\gigachat_final
+Установите зависимости (выполняется один раз):
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+bash
+npm install
+Запустите приложение:
+
+bash
+npm start
+Процесс сборки может занять 1-2 минуты. После завершения сборки браузер автоматически откроется по адресу http://localhost:3000.
+
+Результат: Вы увидите форму авторизации.
+
+🔑 Первый вход в приложение
+Authorization Key: Вставьте ключ авторизации, полученный в личном кабинете GigaChat Studio.
+
+Scope: Оставьте значение GIGACHAT_API_PERS (для физических лиц).
+
+Нажмите кнопку "Войти".
+
+После успешного входа вы попадете в основной интерфейс чата и сможете начать диалог с GigaChat.
+
+❗ Возможные проблемы и их решение
+1. Бэкенд не запускается (ошибки с node-fetch)
+Проблема: У вас установлена слишком старая или новая версия Node.js.
+
+Решение: Убедитесь, что версия Node.js — 16 или выше. Выполните в терминале бэкенда:
+
+bash
+node -v
+2. Фронтенд не видит бэкенд (ошибки Network Error или Failed to fetch)
+Проблема: Фронтенд по умолчанию ищет бэкенд на http://localhost:3001, а бэкенд не запущен или запустился на другом порту.
+
+Решение:
+
+Проверьте, что бэкенд запущен и в его терминале нет ошибок.
+
+Проверьте, что в файле gigachat_final/src/services/gigachatApi.ts в строке private backendUrl = 'http://localhost:3001'; указан правильный порт. (Порт 3001 используется по умолчанию, и менять его не нужно, если вы не меняли порт в бэкенде).
+
+3. Ошибка "Failed to fetch" при отправке сообщения в чат
+Проблема: CORS (Cross-Origin Resource Sharing) политика безопасности браузера.
+
+Решение: В бэкенде уже настроено расширение cors(), которое должно решать эту проблему. Если ошибка persists, попробуйте перезапустить и бэкенд, и фронтенд. Убедитесь, что вы используете флаг npm run dev для запуска бэкенда (он использует nodemon).
+
+4. Ошибка авторизации в GigaChat (в консоли бэкенда)
+Проблема: Неверный ключ авторизации или неверный scope.
+
+Решение:
+
+Проверьте, что вы скопировали ключ полностью и без лишних пробелов.
+
+Попробуйте в форме входа сменить scope на GIGACHAT_API_B2B или GIGACHAT_API_CORP, если ваш аккаунт предназначен для бизнеса.
+
+5. Сообщения в чате отображаются с ошибкой "SSL certificate verify failed"
+Проблема: Сертификаты API Сбера не проходят стандартную проверку Node.js.
+
+Решение: В бэкенде эта проблема уже решена. В файле server.js отключена проверка SSL специально для этого API. Убедитесь, что вы используете последнюю версию файла server.js.
+
+6. Порт 3000 или 3001 уже занят
+Проблема: Другое приложение использует эти порты.
+
+Решение:
+
+Для фронтенда: при запуске npm start вас спросят "Something is already running on port 3000. Would you like to run the app on another port instead?" - согласитесь, нажав Y.
+
+Для бэкенда: Измените порт в файле gigachat_backend/server.js (строка const PORT = 3001; на другой, например 3002) и ОБЯЗАТЕЛЬНО измените его на такой же в файле фронтенда gigachat_final/src/services/gigachatApi.ts (строка private backendUrl = 'http://localhost:3001';). Затем перезапустите оба сервера.
+
+исправь на клонируй  фронт с 
+https://github.com/ganievshr1/frontend_ai.git
+клонируй бэкэнд с 
+https://github.com/ganievshr1/backend_for-_rontend.git
+Я понял! Вам нужно, чтобы я исправил инструкцию для клонирования проектов с GitHub, а не из локальных папок. Вот обновленная инструкция:
+
+Инструкция по запуску проекта GigaChat (с клонированием из GitHub)
+Данный проект состоит из двух частей:
+
+Бэкенд — прокси-сервер для безопасного общения с API GigaChat.
+
+Фронтенд — пользовательский интерфейс (React + TypeScript).
+
+Для корректной работы приложения необходимо запустить обе части.
+
+📋 Предварительные требования
+Убедитесь, что на вашем компьютере установлены следующие программы:
+
+Git — для клонирования репозиториев.
+
+Node.js (версия 16.x или выше) — для запуска приложений.
+
+Ключ авторизации (Authorization Key) от GigaChat. Его можно получить в личном кабинете GigaChat Studio (раздел "Настройки API" → "Получить ключ").
+
+🚀 Шаг 1: Клонирование репозиториев
+Клонирование фронтенда:
+bash
+git clone https://github.com/ganievshr1/frontend_ai.git
+Клонирование бэкенда:
+bash
+git clone https://github.com/ganievshr1/backend_for-_rontend.git
+Примечание: Выполняйте команды в той папке, где вы хотите разместить проекты. После клонирования у вас появятся две папки: frontend_ai и backend_for-_rontend.
+
+🚀 Шаг 2: Запуск бэкенда (прокси-сервер)
+Бэкенд работает как посредник между вашим браузером и API GigaChat.
+
+Откройте терминал.
+
+Перейдите в папку с бэкендом:
+
+bash
+cd backend_for-_rontend
+(Если вы переименовали папку при клонировании, используйте нужное имя)
+
+Установите зависимости (выполняется один раз):
+
+bash
+npm install
+Запустите сервер:
+
+bash
+npm run dev
+Результат: Вы должны увидеть сообщение:
+
+text
+🚀 Proxy server running on http://localhost:3001
+📡 Ожидание запросов от фронтенда...
+Бэкенд успешно запущен и слушает порт 3001. Оставьте этот терминал открытым.
+
+💻 Шаг 3: Запуск фронтенда (пользовательский интерфейс)
+Откройте новый терминал.
+
+Перейдите в папку с фронтендом:
+
+bash
+cd frontend_ai
+Установите зависимости (выполняется один раз):
+
+bash
+npm install
+Запустите приложение:
+
+bash
+npm start
+После сборки браузер автоматически откроется по адресу http://localhost:3000.
+
+Результат: Вы увидите форму авторизации GigaChat.
+
+🔑 Шаг 4: Первый вход в приложение
+Authorization Key: Вставьте ваш ключ авторизации из личного кабинета GigaChat Studio.
+
+Scope: Оставьте GIGACHAT_API_PERS (для физических лиц).
+
+Нажмите "Войти".
+
+После успешного входа вы попадете в интерфейс чата и сможете начать диалог с GigaChat.
+
+❗ Возможные проблемы и их решение
+1. Ошибка npm command not found
+Решение: Установите Node.js с официального сайта и перезапустите терминал.
+
+2. Ошибка git command not found
+Решение: Установите Git с официального сайта и перезапустите терминал.
+
+3. Бэкенд не запускается (ошибки с node-fetch)
+Решение: Убедитесь, что версия Node.js — 16 или выше (node -v).
+
+4. Фронтенд не видит бэкенд (ошибки Network Error)
+Решение:
+
+Проверьте, что бэкенд запущен и работает на порту 3001.
+
+Убедитесь, что в файле frontend_ai/src/services/gigachatApi.ts указан правильный URL:
+
+typescript
+private backendUrl = 'http://localhost:3001';
+5. Ошибка авторизации в GigaChat
+Решение:
+
+Проверьте правильность ключа авторизации.
+
+Попробуйте сменить scope на GIGACHAT_API_B2B или GIGACHAT_API_CORP.
+
+6. Порт 3000 или 3001 уже занят
+Для фронтенда: При запуске npm start согласитесь использовать другой порт (нажмите Y).
+
+Для бэкенда: Измените порт в backend_for-_rontend/server.js (строка const PORT = 3001;) и в frontend_ai/src/services/gigachatApi.ts (строка private backendUrl = 'http://localhost:3001';). Затем перезапустите оба сервера.
+
+7. Ошибка SSL сертификата
+Решение: В бэкенде эта проблема уже решена (отключена проверка SSL для API Сбера). Убедитесь, что вы используете актуальную версию кода из репозитория.
+
+📁 Структура проекта после клонирования
+text
+Ваша рабочая папка/
+├── frontend_ai/              # Фронтенд часть
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── ...
+└── backend_for-_rontend/     # Бэкенд часть
+    ├── server.js
+    ├── package.json
+    └── ...
+✅ Проверка работоспособности
+После успешного запуска обоих серверов:
+
+Откройте http://localhost:3000 в браузере.
+
+Введите ключ авторизации и войдите.
+
+Отправьте сообщение в чат.
+
+Вы должны получить ответ от GigaChat.
