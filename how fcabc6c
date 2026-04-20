@@ -1,0 +1,39 @@
+[33mcommit fcabc6c2d07968a7f0ae85e7436f89efa976d224[m
+Author: ganievshr1 <shomastyk2211@yandex.ru>
+Date:   Sun Apr 19 21:00:10 2026 +0500
+
+    new readme4
+
+[1mdiff --git a/README.md b/README.md[m
+[1mindex 3f55e02..e05489e 100644[m
+[1m--- a/README.md[m
+[1m+++ b/README.md[m
+[36m@@ -165,20 +165,22 @@[m [mprocess.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';[m
+ [m
+ ## 📁 Структура проекта[m
+ [m
+[32m+[m[32m```text[m
+ frontend_ai/ # Фронтенд (React + TypeScript)[m
+ ├── src/[m
+[31m-│ ├── components/ # React компоненты[m
+[31m-│ ├── hooks/ # Пользовательские хуки[m
+[31m-│ ├── services/ # API-клиенты[m
+[31m-│ ├── store/ # Zustand store[m
+[31m-│ ├── styles/ # CSS стили[m
+[31m-│ └── types/ # TypeScript типы[m
+[32m+[m[32m│   ├── components/ # React компоненты[m
+[32m+[m[32m│   ├── hooks/ # Пользовательские хуки[m
+[32m+[m[32m│   ├── services/ # API-клиенты[m
+[32m+[m[32m│   ├── store/ # Zustand store[m
+[32m+[m[32m│   ├── styles/ # CSS стили[m
+[32m+[m[32m│   └── types/ # TypeScript типы[m
+ ├── public/ # Статические файлы[m
+ └── package.json[m
+ [m
+ backend_for_-_rontend/ # Бэкенд (Node.js + Express)[m
+ ├── server.js # Основной сервер[m
+ └── package.json[m
+[32m+[m[32m```[m
+ [m
+ ## 📄 Лицензия[m
+ [m
