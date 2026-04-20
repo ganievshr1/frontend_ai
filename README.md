@@ -1,46 +1,187 @@
-# Getting Started with Create React App
+# 🤖 GigaChat Client - Чат с нейросетью от Сбера
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Веб-приложение для взаимодействия с нейросетью **GigaChat** от Сбера.  
+Проект состоит из двух частей: прокси-сервера (бэкенд) и пользовательского интерфейса (фронтенд).
 
-## Available Scripts
+## 📋 Функциональность
 
-In the project directory, you can run:
+### ✅ Основные возможности
+- **Чат с нейросетью GigaChat** — полноценный диалог с ИИ
+- **Потоковая генерация ответов (streaming)** — ответы появляются токен за токеном
+- **Поддержка Markdown** — заголовки, списки, код, ссылки, таблицы
+- **Подсветка синтаксиса кода** — более 100 языков программирования
+- **Отправка изображений (multimodal)** — анализ и описание изображений
+- **Копирование ответов** — один клик для копирования в буфер обмена
+- **Остановка генерации** — прерывание длинных ответов
 
-### `npm start`
+### 💬 Управление чатами
+- **Создание чатов** — автоматическая генерация названия из первого сообщения
+- **Переименование чатов** — редактирование названия
+- **Удаление чатов** — с подтверждением
+- **Поиск по чатам** — по названию и содержимому
+- **Сохранение истории** — в `localStorage` (не теряется после перезагрузки)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### ⚙️ Настройки
+- **Temperature (0–2)** — креативность ответов
+- **Top-P (0–1)** — разнообразие ответов
+- **Max Tokens** — максимальная длина ответа
+- **System Prompt** — системный промпт
+- **Темная/светлая тема** — для комфортной работы
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## 🛠 Технологии
 
-### `npm test`
+### Бэкенд
+- **Node.js** + **Express** — прокси-сервер
+- **CORS** — для безопасных кросс-доменных запросов
+- **node-fetch** — HTTP-запросы к API GigaChat
+- **dotenv** — управление переменными окружения
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Фронтенд
+- **React 19** + **TypeScript** — пользовательский интерфейс
+- **Zustand** — управление состоянием
+- **React Router DOM** — маршрутизация
+- **React Markdown** + **remark-gfm** — рендеринг Markdown
+- **rehype-highlight** + **highlight.js** — подсветка кода
+- **eventsource-parser** — обработка потоковых SSE-ответов
 
-### `npm run build`
+## 🚀 Установка и запуск
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 📋 Предварительные требования
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- **Git** — для клонирования репозиториев
+- **Node.js** (версия 16.x или выше) — для запуска приложений
+- **Ключ авторизации (Authorization Key)** от GigaChat  
+  Получите его в личном кабинете [GigaChat Studio](https://developers.sber.ru/studio) → *Настройки API* → *Получить ключ*
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 📦 Клонирование репозиториев
 
-### `npm run eject`
+git clone https://github.com/ganievshr1/frontend_ai.git
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+git clone https://github.com/ganievshr1/backend_for_-_rontend.git
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+После клонирования у вас появятся папки:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+- `frontend_ai` — фронтенд (React-приложение)
+- `backend_for_-_rontend` — бэкенд (прокси-сервер)
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## 🔧 Установка зависимостей
 
-## Learn More
+### Бэкенд
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+cd backend_for_-_rontend
+npm install
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Фронтенд
+
+cd ../frontend_ai
+npm install
+
+## 🔑 Получение ключа авторизации GigaChat
+
+1. Перейдите на сайт [GigaChat Studio](https://developers.sber.ru/studio)
+2. Авторизуйтесь через Сбер ID
+3. Перейдите в раздел **"Настройки API"**
+4. Нажмите кнопку **"Получить ключ"**
+5. Скопируйте полученный `Authorization Key`
+
+## 🚀 Запуск приложения
+
+### Запуск бэкенда (в первом терминале)
+
+cd backend_for_-_rontend
+npm run dev
+
+✅ Сервер запустится на `http://localhost:3001`
+
+### Запуск фронтенда (во втором терминале)
+
+cd frontend_ai
+npm start
+
+✅ Приложение откроется на `http://localhost:3000`
+
+## 🔐 Вход в приложение
+
+1. Откройте браузер и перейдите на `http://localhost:3000`
+2. Вставьте скопированный `Authorization Key` в поле ввода
+3. Выберите `Scope` (рекомендуется `GIGACHAT_API_PERS`)
+4. Нажмите кнопку **"Войти"**
+5. Начните диалог с GigaChat
+
+## ❗ Возможные проблемы и решения
+
+### Ошибка `npm command not found`
+
+**Решение:** Установите Node.js с официального сайта: https://nodejs.org/
+
+### Ошибка `git command not found`
+
+**Решение:** Установите Git с официального сайта: https://git-scm.com/
+
+### Фронтенд не видит бэкенд (ошибка Network Error)
+
+**Решение:**
+
+- Проверьте, что бэкенд запущен и работает на порту `3001`
+- Убедитесь, что в файле `frontend_ai/src/services/gigachatApi.ts` указан правильный URL:
+
+private backendUrl = 'http://localhost:3001';
+
+### Ошибка авторизации в GigaChat
+
+**Решение:**
+
+- Проверьте правильность ключа авторизации (скопируйте без лишних пробелов)
+- Попробуйте сменить `Scope` на `GIGACHAT_API_B2B` или `GIGACHAT_API_CORP`
+
+### Порт 3000 или 3001 уже занят
+
+**Решение:**
+
+- **Для фронтенда:** При запуске `npm start` нажмите `Y` для использования другого порта
+- **Для бэкенда:** Измените порт в файле `backend_for_-_rontend/server.js`:
+
+const PORT = 3002;  // измените на свободный порт
+
+### Изменение порта в файле фронтенда
+
+Откройте файл `frontend_ai/src/services/gigachatApi.ts` и измените URL бэкенда:
+
+
+private backendUrl = 'http://localhost:3002';
+
+### Ошибка SSL сертификата
+
+**Решение:** В бэкенде проблема уже решена. В файле `server.js` отключена проверка SSL для API Сбера:
+
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+## ✅ Проверка работоспособности
+
+1. Откройте `http://localhost:3000` в браузере
+2. Введите ключ авторизации и войдите
+3. Отправьте сообщение: *"Привет, расскажи о себе"*
+4. Дождитесь ответа от GigaChat
+
+## 📁 Структура проекта
+
+```text
+frontend_ai/ # Фронтенд (React + TypeScript)
+├── src/
+│   ├── components/ # React компоненты
+│   ├── hooks/ # Пользовательские хуки
+│   ├── services/ # API-клиенты
+│   ├── store/ # Zustand store
+│   ├── styles/ # CSS стили
+│   └── types/ # TypeScript типы
+├── public/ # Статические файлы
+└── package.json
+
+backend_for_-_rontend/ # Бэкенд (Node.js + Express)
+├── server.js # Основной сервер
+└── package.json
+```
+
+## 📄 Лицензия
+
+Проект является учебным и не предназначен для коммерческого использования.
